@@ -58,6 +58,7 @@ $(cppDEPFILES): $(OBJ_DIR)/%.d: %.cpp  Makefile
 $(TARGET): %.bin: $(OBJ_DIR)/%.o $(OBJS)
 	@echo "Linking $@ ..."
 	$(CXX) $^ -o $@ $(CXXFLAGS) $(LDFLAGS)
+	@echo "Done."
 
 clean:
 	@rm -rvf $(OBJ_DIR) $(TARGET)
