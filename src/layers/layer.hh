@@ -23,6 +23,9 @@ class Layer {
 		virtual int out_dim() const = 0;	// output dimension, at most 4 (limited by Halide)
 		virtual ShapeExpr out_shape() const = 0;
 
+		// setup default schedule
+		virtual void default_sched() {}
+
 		virtual ~Layer() {}
 
 		const Halide::Func& get_output() const { return output_; }

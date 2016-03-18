@@ -16,6 +16,7 @@ int main() {
 
 	Input input{par};
 	SoftMax sm(&input);
+	sm.default_sched();
 
 	int n = 1000, m = 1000;
 	speedtest_2D_input(par, &sm, {n, m}, {n, m});

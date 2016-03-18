@@ -24,25 +24,27 @@ class SoftMax : public Layer {
 
 			// TODO numeric stability
 			Halide::RDom sum_reduction(0, in_shape[1]);
-			Halide::Func exp_input("exp_input");
 			exp_input(batch_idx, cls_idx) = exp(input(batch_idx, cls_idx));
+			sum_exp(batch_idx) = sum(exp_input(batch_idx, sum_reduction));
+			output_(batch_idx, cls_idx) = exp_input(batch_idx, cls_idx) / sum_exp(batch_idx);
+		}
 
+		void default_sched() override {
+			// TODO optimize more
 			exp_input.vectorize(cls_idx, 8)
 							 .compute_root();
-
-			Halide::Func sum_exp("sum_exp");
-			sum_exp(batch_idx) = sum(exp_input(batch_idx, sum_reduction));
 
 			sum_exp.vectorize(batch_idx, 8)
 						 .compute_root();
 
-			output_(batch_idx, cls_idx) = exp_input(batch_idx, cls_idx) / sum_exp(batch_idx);
 			output_.vectorize(cls_idx, 8)
 						 .compute_root();
 		}
 
 		ShapeExpr out_shape() const override { return tops_.at(0)->out_shape(); }
 
+
+		Halide::Func exp_input{"exp_input"}, sum_exp{"sum_exp"};
 		Halide::Var batch_idx, cls_idx;
 };
 
