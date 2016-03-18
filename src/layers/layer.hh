@@ -4,24 +4,10 @@
 #pragma once
 #include <vector>
 #include <Halide.h>
+#include "shape.hh"
 #include "lib/debugutils.hh"
 
-class TensorShape {
-	public:
-		TensorShape(Halide::Expr a): shape_{a, -1, -1, -1} {}
-		TensorShape(Halide::Expr a, Halide::Expr b): shape_{a, b, -1, -1} {}
-		TensorShape(Halide::Expr a, Halide::Expr b, Halide::Expr c): shape_{a, b, c, -1} {}
-		TensorShape(Halide::Expr a, Halide::Expr b, Halide::Expr c, Halide::Expr d): shape_{a, b, c, d} {}
-
-		Halide::Expr at(int k) const {
-			m_assert(k < 4 && k >= 0);
-			return shape_[k];
-		}
-
-		Halide::Expr operator [](int k) const { return shape_[k]; }
-	private:
-		Halide::Expr shape_[4];
-};
+namespace hadnn {
 
 // base class of all layers
 class Layer {
@@ -35,47 +21,46 @@ class Layer {
 		}
 
 		virtual int out_dim() const = 0;	// output dimension, at most 4 (limited by Halide)
-		virtual TensorShape out_shape() const = 0;
-
-		virtual void setup() = 0;
+		virtual ShapeExpr out_shape() const = 0;
 
 		virtual ~Layer() {}
 
-		const Halide::Func& get_forward() const { return forward_; }
+		const Halide::Func& get_output() const { return output_; }
 
 
 	protected:
 		std::vector<Layer*> tops_;
 		std::vector<Halide::Image<float>> params_;
 
-		Halide::Func forward_;
+		Halide::Func output_;
 };
 
 class Input : public Layer {
 	public:
-		Input(Halide::ImageParam param): Layer(nullptr), inputs_(param) {}
+		Input(Halide::ImageParam param): Layer(nullptr), inputs_(param)
+		{ setup(); }
 
-		void setup() override {
+		void setup() {
 			ndim_ = inputs_.dimensions();
 			switch (ndim_) {
 				case 1:
-					forward_(x) = inputs_(x);
+					output_(x) = inputs_(x);
 					break;
 				case 2:
-					forward_(x, y) = inputs_(x, y);
+					output_(x, y) = inputs_(x, y);
 					break;
 				case 3:
-					forward_(x, y, z) = inputs_(x, y, z);
+					output_(x, y, z) = inputs_(x, y, z);
 					break;
 				case 4:
-					forward_(x, y, z, w) = inputs_(x, y, z, w);
+					output_(x, y, z, w) = inputs_(x, y, z, w);
 					break;
 				default:
 					error_exit("Unknown dimension");
 			}
 		}
 
-		TensorShape out_shape() const override {
+		ShapeExpr out_shape() const override {
 			switch (ndim_) {
 				case 1:
 					return {inputs_.extent(0)};
@@ -97,3 +82,4 @@ class Input : public Layer {
 		int ndim_;
 		Halide::Var x,y,z,w;
 };
+}
