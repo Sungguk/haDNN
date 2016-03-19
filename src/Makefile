@@ -22,7 +22,7 @@ ccSOURCES = $(shell find . -name "*.cc" | cut -c3-)
 OBJS = $(addprefix $(OBJ_DIR)/,$(ccSOURCES:.cc=.o))
 DEPFILES = $(OBJS:.o=.d)
 
-cppSOURCES = $(shell find . -name "*.cpp" | cut -c3- | grep -v gui)
+cppSOURCES = $(shell find . -name "*.cpp" | cut -c3-)
 cppOBJS = $(addprefix $(OBJ_DIR)/,$(cppSOURCES:.cpp=.o))
 cppDEPFILES = $(cppOBJS:.o=.d)
 TARGET = $(cppSOURCES:.cpp=.bin)
@@ -62,7 +62,6 @@ $(TARGET): %.bin: $(OBJ_DIR)/%.o $(OBJS)
 
 clean:
 	@rm -rvf $(OBJ_DIR) $(TARGET)
-	@make clean -C gui
 
 
 run: $(TARGET)

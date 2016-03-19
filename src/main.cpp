@@ -14,7 +14,7 @@ using namespace Halide;
 using namespace hadnn;
 
 int main() {
-	int B = 16 , Cin = 16, Cout = 64, H = 40, W = 40;
+	int B = 64 , Cin = 3, Cout = 64, H = 224, W = 224;
 	ImageParam par(type_of<float>(), 4);
 
 	Input input{par};
@@ -23,7 +23,7 @@ int main() {
 	l.default_sched();
 
 
-	speedtest_single_input(par, &l, {B, Cin, H, W}, {B, Cout, H, W});
+	speedtest_single_input(par, &l, {H, W, Cin, B}, {H, W, Cout, B});
 	/*
 	 *vector<Argument> args{par};
 	 *output.compile_to_file("test", args);

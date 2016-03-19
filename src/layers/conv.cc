@@ -7,7 +7,7 @@ using namespace Halide;
 
 namespace hadnn {
 
-Conv2D::Conv2D(Layer* top,
+Conv2DHWCN::Conv2DHWCN(Layer* top,
 				const std::vector<Halide::Image<float>>& params,
 				PaddingMode padding, Shape stride):
 	Layer(top),
@@ -21,7 +21,7 @@ Conv2D::Conv2D(Layer* top,
 	setup();
 }
 
-void Conv2D::setup() {
+void Conv2DHWCN::setup() {
 	auto top = tops_.at(0);
 	auto in_shape = top->out_shape();
 
@@ -40,29 +40,38 @@ void Conv2D::setup() {
 				 {0, in_shape[2]}, {0, in_shape[3]}});
 		padded.compute_root();
 
-		RDom kernel(0, filter_[0], 0, filter_[1], 0, in_ch);
-		output_(Nidx, Cidx, Hidx, Widx) = b(Cidx);
-		output_(Nidx, Cidx, Hidx, Widx) +=
+		kernel = RDom{0, filter_[0], 0, filter_[1], 0, in_ch, "kernel"};
+		output_(Hidx, Widx, Cidx, Nidx) = b(Cidx);
+		output_(Hidx, Widx, Cidx, Nidx) +=
 			W(kernel.z, Cidx, kernel.x, kernel.y) *
-			padded(Nidx, kernel.z, Hidx + kernel.x - filter_[0]/2, Widx + kernel.y - filter_[1]/2);
+			padded(Hidx + kernel.x - filter_[0]/2, Widx + kernel.y - filter_[1]/2,
+					   kernel.z, Nidx);
 	}
 }
 
-void Conv2D::default_sched() {
-	output_.reorder(Widx, Hidx, Cidx, Nidx);
-	auto&& U = output_.update();
-	U.reorder(Widx, Hidx, Cidx, Nidx);
+void Conv2DHWCN::default_sched() {
+	Var NC;
+	output_.fuse(Nidx, Cidx, NC).parallel(NC);
+	output_.compute_root();
 
-	output_.print_loop_nest();
+	auto&& U = output_.update();
+	U.reorder(Widx, Hidx, kernel.z);
+
+	Var Wo{"Wo"}, Wi{"Wi"}, Co{"Co"}, Ci{"Ci"}, Ho{"Ho"}, Hi{"Hi"};
+	U.unroll(kernel.x).unroll(kernel.y);
+	U.vectorize(Hidx, 8);
+	U.split(Cidx, Co, Ci, 16);
+	U.fuse(Nidx, Co, NC).parallel(NC);
+	//output_.print_loop_nest();
 }
 
-ShapeExpr Conv2D::out_shape() const {
+ShapeExpr Conv2DHWCN::out_shape() const {
 	auto top = tops_.at(0);
 	auto in_shape = top->out_shape();
-	in_shape[1] = out_ch_;
+	in_shape[2] = out_ch_;
 	if (padding_ == PaddingMode::VALID) {
-		in_shape[2] = in_shape[2] - filter_[0] + 1;
-		in_shape[3] = in_shape[3] - filter_[1] + 1;
+		in_shape[0] = in_shape[0] - filter_[0] + 1;
+		in_shape[1] = in_shape[1] - filter_[1] + 1;
 	}
 	return in_shape;
 }
