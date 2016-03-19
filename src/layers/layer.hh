@@ -35,7 +35,7 @@ class Layer {
 		std::vector<Layer*> tops_;
 		std::vector<Halide::Image<float>> params_;
 
-		Halide::Func output_;
+		Halide::Func output_{"output"};
 };
 
 class Input : public Layer {

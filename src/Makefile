@@ -64,3 +64,6 @@ clean:
 	@rm -rvf $(OBJ_DIR) $(TARGET)
 	@make clean -C gui
 
+
+run: $(TARGET)
+	./main.bin

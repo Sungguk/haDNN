@@ -19,7 +19,6 @@ class SoftMax : public Layer {
 		void setup() {
 			auto top = tops_.at(0);
 			auto in_shape = top->out_shape();
-
 			auto input = top->get_output();
 
 			// TODO numeric stability

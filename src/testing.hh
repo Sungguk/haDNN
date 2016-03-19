@@ -1,4 +1,4 @@
-//File: speed.hh
+//File: testing.hh
 //Author: Yuxin Wu <ppwwyyxx@gmail.com>
 
 #pragma once
@@ -10,7 +10,7 @@
 
 namespace hadnn {
 
-void speedtest_2D_input(
+void speedtest_single_input(
 		Halide::ImageParam& input, Layer* out_layer,
 		const Shape& in_shape, const Shape& out_shape) {
 	auto out_func = out_layer->get_output();
@@ -20,9 +20,16 @@ void speedtest_2D_input(
 	input.set(in_img);
 	out_func.realize(out_img);	// compile
 	{
-		GuardedTimer tm("2D realize");
+		GuardedTimer tm("Realize Time");
 		out_func.realize(out_img);
 	}
 };
+
+void run_single_input(Halide::ImageParam& input, Layer* out_layer,
+		const Halide::Image<float>& input_data, const Halide::Image<float>& output_data) {
+	auto out_func = out_layer->get_output();
+	input.set(input_data);
+	out_func.realize(output_data);
+}
 
 }

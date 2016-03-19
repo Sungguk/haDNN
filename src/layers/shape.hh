@@ -26,6 +26,7 @@ class ShapeExpr {
 
 class Shape {
 	public:
+		Shape(): shape_{-1, -1, -1, -1} {}
 		Shape(int a): shape_{a, -1, -1, -1} {}
 		Shape(int a, int b): shape_{a, b, -1, -1} {}
 		Shape(int a, int b, int c): shape_{a, b, c, -1} {}
