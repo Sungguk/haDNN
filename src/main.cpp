@@ -16,9 +16,15 @@ using namespace hadnn;
 int main() {
 	int B = 64 , Cin = 3, Cout = 64, H = 224, W = 224;
 	ImageParam par(type_of<float>(), 4);
+	par.set_bounds(0, 0, H);
+	par.set_bounds(1, 0, W);
+	par.set_bounds(2, 0, Cin);
+	par.set_bounds(3, 0, B);
+	par.set_stride(0, 1);
+
 
 	Input input{par};
-	vector<Image<float>> params{random_image({Cin, Cout, 3, 3}), random_image({Cout})};
+	vector<Image<float>> params{random_image({3, 3, Cout, Cin}), random_image({Cout})};
 	Conv2D l(&input, params, PaddingMode::SAME);
 	l.default_sched();
 

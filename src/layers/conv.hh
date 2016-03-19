@@ -11,13 +11,13 @@ enum class PaddingMode : char {
 	SAME
 };
 
-// HWCN Conv2D
-class Conv2DHWCN : public Layer {
+// NCHW Conv2D
+class Conv2DNCHW : public Layer {
 	public:
 		// params: W, b
-		// W: [in_ch, out_ch, ker_w, ker_h]
+		// W: [ker_w, ker_h, out_ch, in_ch]
 		// b: [out_ch]
-		Conv2DHWCN(Layer* top,
+		Conv2DNCHW(Layer* top,
 				const std::vector<Halide::Image<float>>& params,
 				PaddingMode padding, Shape stride={1,1});
 
@@ -30,13 +30,14 @@ class Conv2DHWCN : public Layer {
 		void default_sched() override;
 
 		Halide::Var Nidx{"Nidx"}, Cidx{"Cidx"}, Hidx{"Hidx"}, Widx{"Widx"};
+		Halide::Func padded;
 		Halide::RDom kernel;
 	protected:
 		PaddingMode padding_;
 		Shape stride_, filter_;
-		int out_ch_;
+		int out_ch_, in_ch_;
 };
 
 
-typedef Conv2DHWCN Conv2D;
+typedef Conv2DNCHW Conv2D;
 }		// namespace hadnn
