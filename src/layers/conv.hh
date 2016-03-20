@@ -6,11 +6,6 @@
 
 namespace hadnn {
 
-enum class PaddingMode : char {
-	VALID,
-	SAME
-};
-
 // NCHW Conv2D
 class Conv2DNCHW : public Layer {
 	public:

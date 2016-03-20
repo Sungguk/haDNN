@@ -6,8 +6,8 @@
 #include "lib/utils.hh"
 #include "lib/debugutils.hh"
 #include "common.hh"
-#include "layers/softmax.hh"
 #include "layers/conv.hh"
+#include "layers/data.hh"
 
 using namespace std;
 using namespace Halide;

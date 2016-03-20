@@ -7,6 +7,13 @@ using namespace Halide;
 
 namespace hadnn {
 
+#define CHECK_CONV_PARAMS \
+	m_assert(padding_ == PaddingMode::SAME); \
+	m_assert(params.size() == 2UL); \
+	m_assert(params_[0].dimensions() == 4); \
+	m_assert(params_[1].dimensions() == 1); \
+	m_assert(stride_[0] == 1 && stride_[1] == 1)
+
 Conv2DNCHW::Conv2DNCHW(Layer* top,
 				const std::vector<Halide::Image<float>>& params,
 				PaddingMode padding, Shape stride):
@@ -14,10 +21,7 @@ Conv2DNCHW::Conv2DNCHW(Layer* top,
 	padding_(padding), stride_(stride)
 {
 	params_ = params;
-	m_assert(params.size() == 2UL);
-	m_assert(params_[0].dimensions() == 4);
-	m_assert(params_[1].dimensions() == 1);
-	m_assert(stride_[0] == 1 && stride_[1] == 1);
+	CHECK_CONV_PARAMS;
 	setup();
 }
 
@@ -49,7 +53,7 @@ void Conv2DNCHW::setup() {
 }
 
 void Conv2DNCHW::default_sched() {
-//	padded.compute_root();
+	padded.compute_root();
 	Var par{"par"};
 	output_.vectorize(Widx, 8);
 	output_.fuse(Nidx, Cidx, par).parallel(par);
@@ -87,10 +91,7 @@ Conv2DHWCN::Conv2DHWCN(Layer* top,
 	padding_(padding), stride_(stride)
 {
 	params_ = params;
-	m_assert(params.size() == 2UL);
-	m_assert(params_[0].dimensions() == 4);
-	m_assert(params_[1].dimensions() == 1);
-	m_assert(stride_[0] == 1 && stride_[1] == 1);
+	CHECK_CONV_PARAMS;
 	setup();
 }
 
@@ -112,7 +113,7 @@ void Conv2DHWCN::setup() {
 				{{0, in_shape[0]}, {0, in_shape[1]},
 				 {0, in_shape[2]}, {0, in_shape[3]}});
 
-		kernel = RDom{0, filter_[0], 0, filter_[1], 0, in_ch_, "kernel"};
+		kernel = RDom{0, filter_[1], 0, filter_[0], 0, in_ch_, "kernel"};
 		output_(Nidx, Cidx, Widx, Hidx) = b(Cidx);
 		output_(Nidx, Cidx, Widx, Hidx) +=
 			W(kernel.x, kernel.y, Cidx, kernel.z) *
