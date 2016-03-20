@@ -42,22 +42,39 @@ int main() {
 
 	Input input{par};
 
+	{ // conv2
+	int B = 64 , Cin = 64, Cout = 128, H = 112, W = 112;
+	auto paraW = random_image({3, 3, Cout, Cin}),
+			 parab = random_image({Cout});
+	vector<Image<float>> params{paraW, parab};
+	Conv2DHWCN conv(&input, params, PaddingMode::SAME);
+	conv.default_sched();
+	speedtest_single_input(par, &conv, {B, Cin, W, H}, {B, Cout, W, H});
+	}
+
 	/*
-	 *{ // conv2
-	 *int B = 64 , Cin = 64, Cout = 128, H = 112, W = 112;
-	 *auto paraW = random_image({3, 3, Cout, Cin}),
-	 *     parab = random_image({Cout});
-	 *vector<Image<float>> params{paraW, parab};
-	 *Conv2DHWCN conv(&input, params, PaddingMode::SAME);
-	 *conv.default_sched();
-	 *speedtest_single_input(par, &conv, {B, Cin, W, H}, {B, Cout, W, H});
+	 *{ // pool1
+	 *  int B = 64, C = 64, H = 224, W = 224;
+	 *  Pooling maxpool(&input, {2, 2}, PaddingMode::VALID, PoolingMode::MAX);
+	 *  maxpool.default_sched();
+	 *  speedtest_single_input(par, &maxpool, {B, C, W, H}, {B, C, W/2, H/2});
 	 *}
 	 */
 
-	{ // pool1
-		int B = 64, C = 64, H = 224, W = 224;
-		MaxPool maxpool(&input, {2, 2}, PaddingMode::VALID);
+	{	// conv1 + pool1 + conv2
+		int C[]{3, 64, 128};
+		int B = 64, H = 224, W = 224;
+		auto paraW = random_image({3, 3, C[1], C[0]}),
+				 parab = random_image({C[1]});
+		vector<Image<float>> params{paraW, parab};
+		Conv2DHWCN conv(&input, params, PaddingMode::SAME);
+		conv.default_sched();
+		Pooling maxpool(&conv, {2, 2}, PaddingMode::VALID, PoolingMode::MAX);
 		maxpool.default_sched();
-		speedtest_single_input(par, &maxpool, {B, C, W, H}, {B, C, W/2, H/2});
+		vector<Image<float>> params2{
+			random_image({3, 3, C[2], C[1]}), random_image({C[2]})};
+		Conv2DHWCN conv2(&maxpool, params2, PaddingMode::SAME);
+		conv2.default_sched();
+	  speedtest_single_input(par, &conv2, {B, C[0], W, H}, {B, C[2], W/2, H/2});
 	}
 }

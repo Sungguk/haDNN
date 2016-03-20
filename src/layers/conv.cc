@@ -134,7 +134,8 @@ void Conv2DHWCN::default_sched() {
 	U.vectorize(Nidx, 8);
 	U.fuse(Hidx, Widx, par).parallel(par);
 	padded.compute_at(output_, par);
-	output_.print_loop_nest();
+	output_.compute_root();
+	//output_.print_loop_nest();
 }
 
 ShapeExpr Conv2DHWCN::out_shape() const {

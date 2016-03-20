@@ -7,12 +7,18 @@
 
 namespace hadnn {
 
+enum class PoolingMode : char {
+	MAX,
+	AVG
+};
+
 // takes HWCN input
-class MaxPool : public Layer {
+class Pooling : public Layer {
 	public:
-		MaxPool(Layer* top, Shape shape, PaddingMode padding) :
-			Layer(top), shape_(shape), padding_(padding) {
+		Pooling(Layer* top, Shape shape, PaddingMode padding, PoolingMode mode) :
+			Layer(top), shape_(shape), padding_(padding), mode_(mode) {
 				m_assert(padding_ == PaddingMode::VALID);
+				m_assert(mode_ == PoolingMode::MAX);
 				setup();
 			}
 
@@ -29,7 +35,11 @@ class MaxPool : public Layer {
 		}
 
 		void default_sched() override {
-			output_.print_loop_nest();
+			Halide::Var par{"par"};
+			output_.fuse(Hidx, Widx, par).parallel(par);
+			output_.vectorize(Nidx, 8);
+			output_.compute_root();
+			//output_.print_loop_nest();
 		}
 
 		int out_dim() const override { return 4; }
@@ -49,5 +59,6 @@ class MaxPool : public Layer {
 	protected:
 		Shape shape_;
 		PaddingMode padding_;
+		PoolingMode mode_;
 };
 }	// namespace hadnn
