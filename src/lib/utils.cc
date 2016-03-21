@@ -2,6 +2,7 @@
 // Date: Tue Apr 23 11:33:17 2013 +0800
 // Author: Yuxin Wu <ppwwyyxxc@gmail.com>
 
+#include <vector>
 #include "utils.hh"
 
 string TERM_COLOR(int k) {
@@ -63,4 +64,32 @@ std::string ssprintf(const char *fmt, ...) {
 		} else
 			p = np;
 	}
+}
+
+
+std::vector<std::string> strsplit(const std::string &str, const std::string &sep) {
+	std::vector<std::string> ret;
+
+	auto is_sep = [&](int c) -> bool {
+		if (sep.length())
+			return sep.find(c) != std::string::npos;
+		return isblank(c);
+	};
+
+	// split("\n\naabb\n\nbbcc\n") -> ["aabb", "bbcc"]. same as python
+	for (size_t i = 0; i < str.length(); ) {
+		while (i < str.length() && is_sep(str[i]))
+			i ++;
+		size_t j = i + 1;
+
+		while (j < str.length() && !is_sep(str[j]))
+			j ++;
+		ret.emplace_back(str.substr(i, j - i));
+
+		i = j + 1;
+		while (i < str.length() && is_sep(str[i]))
+			i ++;
+	}
+
+	return ret;
 }

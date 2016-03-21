@@ -2,6 +2,11 @@
 //Author: Yuxin Wu <ppwwyyxx@gmail.com>
 
 #include "common.hh"
+
+#include <fstream>
+#include <sstream>
+
+#include "lib/utils.hh"
 using namespace Halide;
 
 namespace hadnn {
@@ -73,6 +78,43 @@ void write_tensor(const Image<float>& v, std::ostream& os) {
 					    os.write((char*)&v(i, j, k, l), sizeof(float));
 			break;
 	}
+}
+
+unordered_map<string, Image<float>> read_params(string fname) {
+	unordered_map<string, Image<float>> ret;
+	ifstream fin(fname);
+	while (not fin.eof()) {
+		string meta;
+		getline(fin, meta);
+		if (fin.eof()) break;
+		auto ss = strsplit(meta, " ");
+		string& name = ss[0];
+		int ndim = ss.size() - 1;
+		Image<float> im;
+		switch (ndim) {
+			case 1:
+				im = Image<float>(stoi(ss[1]), name);
+				break;
+			case 2:
+				im = Image<float>(stoi(ss[2]), stoi(ss[1]), name);
+				break;
+			case 3:
+				im = Image<float>(stoi(ss[3]), stoi(ss[2]), stoi(ss[1]), name);
+				break;
+			case 4:
+				im = Image<float>(stoi(ss[4]), stoi(ss[3]), stoi(ss[2]), stoi(ss[1]), name);
+				break;
+			default:
+				error_exit("Unsupported dim");
+		}
+		int nele = 1;
+		for (size_t k = 1; k < ss.size(); ++k)
+			nele *= stoi(ss[k]);
+		float* ptr = im.data();
+		fin.read((char*)ptr, nele * sizeof(float));
+		ret[name] = move(im);
+	}
+	return ret;
 }
 
 }

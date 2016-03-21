@@ -6,6 +6,7 @@
 #pragma once
 
 #include <cstdarg>
+#include <vector>
 #include <cstdlib>
 #include <string>
 #include <cstring>
@@ -97,3 +98,5 @@ inline int pow2roundup(int x) {
 	x |= x >> 16;
 	return x+1;
 }
+
+std::vector<std::string> strsplit(const std::string &str, const std::string &sep);
