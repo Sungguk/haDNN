@@ -19,8 +19,6 @@ using namespace hadnn;
 
 int main() {
 	ImageParam par(type_of<float>(), 4);
-	auto r = read_params("tests/vgg.tensortxt");	// untested
-	return 0;
 
 	Input input{par};
 

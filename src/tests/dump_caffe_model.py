@@ -22,7 +22,7 @@ def main():
     params = load_caffe(args.model, args.weights)
 
     fout = open(args.output, 'wb')
-    for name, val in sorted(params.items(), key=operator.itemgetter(1)):
+    for name, val in sorted(params.items(), key=operator.itemgetter(0)):
         if 'conv' in name and '/W' in name:
             # hwio to iohw
             val = val.transpose(2, 3, 0, 1)

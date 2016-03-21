@@ -87,29 +87,30 @@ unordered_map<string, Image<float>> read_params(string fname) {
 		string meta;
 		getline(fin, meta);
 		if (fin.eof()) break;
-		auto ss = strsplit(meta, " ");
-		string& name = ss[0];
-		int ndim = ss.size() - 1;
+		auto param = strsplit(meta, " ");
+		string& name = param[0];
+		int ndim = param.size() - 1;
 		Image<float> im;
 		switch (ndim) {
 			case 1:
-				im = Image<float>(stoi(ss[1]), name);
+				im = Image<float>(stoi(param[1]), name);
 				break;
 			case 2:
-				im = Image<float>(stoi(ss[2]), stoi(ss[1]), name);
+				im = Image<float>(stoi(param[2]), stoi(param[1]), name);
 				break;
 			case 3:
-				im = Image<float>(stoi(ss[3]), stoi(ss[2]), stoi(ss[1]), name);
+				im = Image<float>(stoi(param[3]), stoi(param[2]), stoi(param[1]), name);
 				break;
 			case 4:
-				im = Image<float>(stoi(ss[4]), stoi(ss[3]), stoi(ss[2]), stoi(ss[1]), name);
+				im = Image<float>(stoi(param[4]), stoi(param[3]), stoi(param[2]), stoi(param[1]), name);
 				break;
 			default:
 				error_exit("Unsupported dim");
 		}
+		PA(param);
 		int nele = 1;
-		for (size_t k = 1; k < ss.size(); ++k)
-			nele *= stoi(ss[k]);
+		for (size_t k = 1; k < param.size(); ++k)
+			nele *= stoi(param[k]);
 		float* ptr = im.data();
 		fin.read((char*)ptr, nele * sizeof(float));
 		ret[name] = move(im);

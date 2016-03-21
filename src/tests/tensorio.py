@@ -4,7 +4,6 @@
 # Author: Yuxin Wu <ppwwyyxx@gmail.com>
 
 import numpy as np
-import tensorflow as tf
 
 def read_value(f):
     meta = f.readline().strip().split()
@@ -20,6 +19,7 @@ def read_value(f):
     return name, arr
 
 def read_to_tf_var(f, cnt):
+    import tensorflow as tf
     ret = []
     for k in range(cnt):
         name, arr = read_value(f)
