@@ -12,7 +12,7 @@ enum class PoolingMode : char {
 	AVG
 };
 
-// takes HWCN input
+// HWCN Pooling
 class Pooling : public Layer {
 	public:
 		Pooling(Layer* top, Shape shape, PaddingMode padding, PoolingMode mode) :
@@ -57,7 +57,7 @@ class Pooling : public Layer {
 		Halide::RDom kernel;
 		Halide::Var Nidx{"Nidx"}, Cidx{"Cidx"}, Hidx{"Hidx"}, Widx{"Widx"};
 	protected:
-		Shape shape_;
+		Shape shape_;	// pooling stride in {h, w}
 		PaddingMode padding_;
 		PoolingMode mode_;
 };

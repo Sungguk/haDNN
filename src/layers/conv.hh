@@ -60,5 +60,5 @@ class Conv2DHWCN: public Layer {
 		int out_ch_, in_ch_;
 };
 
-typedef Conv2DNCHW Conv2D;
+typedef Conv2DHWCN Conv2D;
 }		// namespace hadnn

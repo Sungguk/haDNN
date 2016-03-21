@@ -10,6 +10,7 @@
 #include "layers/conv.hh"
 #include "layers/pool.hh"
 #include "layers/data.hh"
+#include "network.hh"
 
 using namespace std;
 using namespace Halide;
@@ -42,15 +43,17 @@ int main() {
 
 	Input input{par};
 
-	{ // conv2
-	int B = 64 , Cin = 64, Cout = 128, H = 112, W = 112;
-	auto paraW = random_image({3, 3, Cout, Cin}),
-			 parab = random_image({Cout});
-	vector<Image<float>> params{paraW, parab};
-	Conv2DHWCN conv(&input, params, PaddingMode::SAME);
-	conv.default_sched();
-	speedtest_single_input(par, &conv, {B, Cin, W, H}, {B, Cout, W, H});
-	}
+	/*
+	 *{ // conv2
+	 *  int B = 64 , Cin = 64, Cout = 128, H = 112, W = 112;
+	 *  auto paraW = random_image({3, 3, Cout, Cin}),
+	 *       parab = random_image({Cout});
+	 *  vector<Image<float>> params{paraW, parab};
+	 *  Conv2DHWCN conv(&input, params, PaddingMode::SAME);
+	 *  conv.default_sched();
+	 *  speedtest_single_input(par, conv.get_output(), {B, Cin, W, H}, {B, Cout, W, H});
+	 *}
+	 */
 
 	/*
 	 *{ // pool1
@@ -67,14 +70,17 @@ int main() {
 		auto paraW = random_image({3, 3, C[1], C[0]}),
 				 parab = random_image({C[1]});
 		vector<Image<float>> params{paraW, parab};
-		Conv2DHWCN conv(&input, params, PaddingMode::SAME);
-		conv.default_sched();
-		Pooling maxpool(&conv, {2, 2}, PaddingMode::VALID, PoolingMode::MAX);
-		maxpool.default_sched();
 		vector<Image<float>> params2{
 			random_image({3, 3, C[2], C[1]}), random_image({C[2]})};
-		Conv2DHWCN conv2(&maxpool, params2, PaddingMode::SAME);
-		conv2.default_sched();
-	  speedtest_single_input(par, &conv2, {B, C[0], W, H}, {B, C[2], W/2, H/2});
+
+		Network net(input);
+		auto conv1 = new Conv2D(&input, params, PaddingMode::SAME);
+		auto pool1 = new Pooling(conv1, {2,2}, PaddingMode::VALID, PoolingMode::MAX);
+		auto conv2 = new Conv2D(pool1, params2, PaddingMode::SAME);
+		net.add(conv1).add(pool1).add(conv2);
+		net.default_sched();
+
+		speedtest_single_input(par, net.get_output(),
+				{B, C[0], W, H}, {B, C[2], W/2, H/2});
 	}
 }

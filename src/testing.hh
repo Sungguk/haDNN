@@ -11,10 +11,8 @@
 namespace hadnn {
 
 void speedtest_single_input(
-		Halide::ImageParam& input, Layer* out_layer,
+		Halide::ImageParam& input, Halide::Func out_func,
 		const Shape& in_shape, const Shape& out_shape) {
-	auto out_func = out_layer->get_output();
-
 	auto in_img = random_image(in_shape);
 	auto out_img = random_image(out_shape);
 	input.set(in_img);
