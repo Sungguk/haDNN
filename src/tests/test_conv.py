@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 # File: test_conv.py
 # Author: Yuxin Wu <ppwwyyxx@gmail.com>
@@ -20,9 +20,9 @@ def test_nchw():
     sess = tf.Session()
     with sess.as_default():
         tf.initialize_all_variables().run()
-        print time.time()
+        print(time.time())
         result = result.eval()
-        print time.time()
+        print(time.time())
         diff = np.max(result - output)
         assert diff < 1e-5, diff
 
@@ -40,11 +40,11 @@ def test_nchw():
     sess = tf.Session()
     with sess.as_default():
         tf.initialize_all_variables().run()
-        print time.time()
+        print(time.time())
         result = result.eval()
-        print time.time()
+        print(time.time())
         diff = np.max(result - output)
-        print "Diff: ", diff
+        print("Diff: ", diff)
         assert diff < 1e-5, diff
 
 if __name__ == '__main__':

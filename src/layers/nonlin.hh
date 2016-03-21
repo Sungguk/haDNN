@@ -34,6 +34,10 @@ class ReLU : public Layer {
 			}
 		}
 
+		void default_sched() override {
+			// TODO
+		}
+
 		int out_dim() const override { return ndim_; }
 
 		ShapeExpr out_shape() const override { return tops_[0]->out_shape(); }

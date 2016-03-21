@@ -14,7 +14,7 @@ def read_value(f):
     data = f.read(nele * 4)
     arr = np.fromstring(data, dtype='float32')
     arr = arr.reshape(shape)
-    print name, shape
+    print(name, shape)
     return name, arr
 
 def read_to_tf_var(f, cnt):
