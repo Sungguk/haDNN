@@ -38,7 +38,6 @@ class Pooling : public Layer {
 			Halide::Var par{"par"};
 			output_.fuse(Hidx, Widx, par).parallel(par);
 			output_.vectorize(Nidx, 8);
-			output_.compute_root();
 			//output_.print_loop_nest();
 		}
 

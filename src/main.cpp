@@ -9,6 +9,7 @@
 #include "layers/softmax.hh"
 #include "layers/conv.hh"
 #include "layers/pool.hh"
+#include "layers/nonlin.hh"
 #include "layers/data.hh"
 #include "network.hh"
 
@@ -75,10 +76,12 @@ int main() {
 
 		Network net(input);
 		auto conv1 = new Conv2D(&input, params, PaddingMode::SAME);
-		auto pool1 = new Pooling(conv1, {2,2}, PaddingMode::VALID, PoolingMode::MAX);
+		auto relu1 = new ReLU(conv1);
+		auto pool1 = new Pooling(relu1, {2,2}, PaddingMode::VALID, PoolingMode::MAX);
 		auto conv2 = new Conv2D(pool1, params2, PaddingMode::SAME);
-		net.add(conv1).add(pool1).add(conv2);
+		net.add(conv1).fence().add(relu1).fence().add(pool1).fence().add(conv2).fence();
 		net.default_sched();
+		net.get_output().print_loop_nest();
 
 		speedtest_single_input(par, net.get_output(),
 				{B, C[0], W, H}, {B, C[2], W/2, H/2});

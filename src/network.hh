@@ -23,6 +23,11 @@ class Network {
 			return *this;
 		}
 
+		Network& fence() {
+			layers_.back()->get_output().compute_root();
+			return *this;
+		}
+
 		Layer* back() {
 			auto ret = layers_.back().get();
 			m_assert(ret != nullptr);
@@ -34,7 +39,7 @@ class Network {
 				l->default_sched();
 		}
 
-		const Halide::Func& get_output() const {
+		Halide::Func& get_output() const {
 			return layers_.back()->get_output();
 		}
 

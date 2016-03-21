@@ -28,8 +28,7 @@ class Layer {
 
 		virtual ~Layer() {}
 
-		const Halide::Func& get_output() const { return output_; }
-
+		Halide::Func& get_output() { return output_; }
 
 	protected:
 		std::vector<Layer*> tops_;
