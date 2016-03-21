@@ -16,7 +16,7 @@ void speedtest_single_input(
 	auto in_img = random_image(in_shape);
 	auto out_img = random_image(out_shape);
 	input.set(in_img);
-	out_func.realize(out_img);	// compile
+	out_func.compile_jit();
 	{
 		GuardedTimer tm("Realize Time");
 		out_func.realize(out_img);

@@ -132,8 +132,13 @@ void Conv2DHWCN::default_sched() {
 	U.reorder(Cidx, kernel.z);
 
 	U.vectorize(Nidx, 8);
-	U.fuse(Hidx, Widx, par).parallel(par);
-	padded.compute_at(output_, par);
+	if (true) {
+		// parallel
+		U.fuse(Hidx, Widx, par).parallel(par);
+		padded.compute_at(output_, par);
+	} else {
+		padded.compute_at(output_, Widx);
+	}
 	//output_.print_loop_nest();
 }
 

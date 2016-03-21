@@ -44,26 +44,17 @@ int main() {
 
 	Input input{par};
 
-	/*
-	 *{ // conv2
-	 *  int B = 64 , Cin = 64, Cout = 128, H = 112, W = 112;
-	 *  auto paraW = random_image({3, 3, Cout, Cin}),
-	 *       parab = random_image({Cout});
-	 *  vector<Image<float>> params{paraW, parab};
-	 *  Conv2DHWCN conv(&input, params, PaddingMode::SAME);
-	 *  conv.default_sched();
-	 *  speedtest_single_input(par, conv.get_output(), {B, Cin, W, H}, {B, Cout, W, H});
-	 *}
-	 */
-
-	/*
-	 *{ // pool1
-	 *  int B = 64, C = 64, H = 224, W = 224;
-	 *  Pooling maxpool(&input, {2, 2}, PaddingMode::VALID, PoolingMode::MAX);
-	 *  maxpool.default_sched();
-	 *  speedtest_single_input(par, &maxpool, {B, C, W, H}, {B, C, W/2, H/2});
-	 *}
-	 */
+	{ // conv2
+		int B = 64 , Cin = 64, Cout = 128, H = 112, W = 112;
+		auto paraW = random_image({3, 3, Cout, Cin}, "W"),
+				 parab = random_image({Cout}, "b");
+		vector<Image<float>> params{paraW, parab};
+		auto conv = new Conv2D(&input, params, PaddingMode::SAME);
+		Network net(input); net.add(conv).fence();
+		net.default_sched();
+		auto& O = net.get_output();
+		speedtest_single_input(par, O, {B, Cin, W, H}, {B, Cout, W, H});
+	}
 
 	{	// conv1 + pool1 + conv2
 		int C[]{3, 64, 128};
@@ -81,8 +72,9 @@ int main() {
 		auto conv2 = new Conv2D(pool1, params2, PaddingMode::SAME);
 		net.add(conv1).fence().add(relu1).fence().add(pool1).fence().add(conv2).fence();
 		net.default_sched();
-		net.get_output().print_loop_nest();
 
+		auto& O = net.get_output();
+		//O.print_loop_nest();
 		speedtest_single_input(par, net.get_output(),
 				{B, C[0], W, H}, {B, C[2], W/2, H/2});
 	}
