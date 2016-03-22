@@ -20,6 +20,7 @@ class Network {
 		// Network holds ownership of l
 		Network& add(Layer* l) {
 			layers_.emplace_back(l);
+			fence();
 			return *this;
 		}
 

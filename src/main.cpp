@@ -48,7 +48,7 @@ int main() {
 		auto relu1 = new ReLU(conv1);
 		auto pool1 = new Pooling(relu1, {2,2}, PaddingMode::VALID, PoolingMode::MAX);
 		auto conv2 = new Conv2D(pool1, params2, PaddingMode::SAME);
-		net.add(conv1).fence().add(relu1).fence().add(pool1).fence().add(conv2).fence();
+		net.add(conv1).add(relu1).add(pool1).add(conv2);
 		net.default_sched();
 
 		auto& O = net.get_output();
