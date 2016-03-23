@@ -6,10 +6,10 @@ nets[#nets+1] = require 'vgg_a'
 
 local libs = {}
 libs[#libs+1] = {nn.SpatialConvolutionMM, nn.SpatialMaxPooling, nn.ReLU, 'BDHW', 'nn'}
-libs[#libs+1] = {nn.SpatialConvolutionBHWD, nn.SpatialMaxPoolingBHWD, nn.ReLU, 'BHWD', 'nnBHWD'}
+--libs[#libs+1] = {nn.SpatialConvolutionBHWD, nn.SpatialMaxPoolingBHWD, nn.ReLU, 'BHWD', 'nnBHWD'}
 
-steps = 10 -- nb of steps in loop to average perf
-nDryRuns = 10
+steps = 5 -- nb of steps in loop to average perf
+nDryRuns = 2
 
 function makeInput(config, size)
    local layout = config[4]
@@ -38,10 +38,11 @@ for i=1,#nets do
       for i=1,nDryRuns do
          model:zeroGradParameters()
          local output = model:updateOutput(input)
-         local gradInput = model:updateGradInput(input, output)
-         model:accGradParameters(input, output)
+         --local gradInput = model:updateGradInput(input, output)
+         --model:accGradParameters(input, output)
          collectgarbage()
       end
+      print("Finish dry run")
 
       local tmf, tmbi, tmbg
       sys.tic()

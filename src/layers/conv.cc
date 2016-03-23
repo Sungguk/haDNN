@@ -9,7 +9,6 @@ using namespace Halide;
 namespace hadnn {
 
 #define CHECK_CONV_PARAMS \
-	m_assert(padding_ == PaddingMode::SAME); \
 	m_assert(params.size() == 2UL); \
 	m_assert(params_[0].dimensions() == 4); \
 	m_assert(params_[1].dimensions() == 1); \
@@ -120,24 +119,40 @@ void Conv2DHWCN::setup() {
 		output_(Nidx, Cidx, Widx, Hidx) +=
 				W(kernel.x, kernel.y, Cidx, kernel.z) *
 				padded(Nidx,kernel.z,Widx+kernel.x-1,Hidx+kernel.y-1);
+		/*
+		 *output_(Nidx, Cidx, Widx, Hidx) = Halide::sum(
+		 *     W(kernel.x, kernel.y, Cidx, kernel.z) *
+		 *     padded(Nidx,kernel.z,Widx+kernel.x-1,Hidx+kernel.y-1)
+		 *    );
+		 *output_(Nidx, Cidx, Widx, Hidx) += b(Cidx);
+		 */
+	} else {
+		kernel = RDom{0, filter_[1], 0, filter_[0], 0, in_ch_, "kernel"};
+		output_(Nidx, Cidx, Widx, Hidx) = b(Cidx);
+		output_(Nidx, Cidx, Widx, Hidx) +=
+				W(kernel.x, kernel.y, Cidx, kernel.z) *
+				input(Nidx,kernel.z,Widx+kernel.x,Hidx+kernel.y);
 	}
 }
 
 void Conv2DHWCN::default_sched() {
 	Var par{"par"};
-	output_.fuse(Hidx, Widx, par).parallel(par);
+	//output_.fuse(Hidx, Widx, par).parallel(par);
 
+	output_.bound(Cidx, 0, out_ch_);
 	auto&& U = output_.update();
-	U.reorder(Nidx, kernel.z);
-	U.reorder(Cidx, kernel.z);
-
+	U.reorder(Cidx, Nidx, kernel.z);
 	U.vectorize(Nidx, 8);
+
+	//U.reorder(Nidx, kernel.z, Cidx);
+	//U.reorder(Nidx, kernel.y);
+
 	if (true) {
 		// parallel
 		U.fuse(Hidx, Widx, par).parallel(par);
 		padded.compute_at(output_, par);
 	} else {
-		padded.compute_at(output_, Widx);
+		padded.compute_at(output_, Nidx);
 	}
 	//output_.print_loop_nest();
 }

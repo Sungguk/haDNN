@@ -41,16 +41,20 @@ int main() {
 		add_conv_pool(1, 1);
 		// 128x56x56
 		add_conv_pool(2, 2);
-		// 256x28x28
+		 // 256x28x28
 		add_conv_pool(4, 2);
-		// 512x14x14
+		 // 512x14x14
 		add_conv_pool(6, 2);
 		// 512x7x7
 		net.default_sched();
 
 		auto& O = net.get_output();
 		O.print_loop_nest();
+		/*
+		 *speedtest_single_input(par, net.get_output(),
+		 *    {B, C[0], W, H}, {B,256,28,28});
+		 */
 		speedtest_single_input(par, net.get_output(),
-				{B, C[0], W, H}, {B, 512, 7, 7});
+				{B, C[0], W, H}, {B,512,7,7});
 	}
 }
