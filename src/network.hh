@@ -29,7 +29,7 @@ class Network {
 			return *this;
 		}
 
-		Layer* back() {
+		Layer* last() {
 			auto ret = layers_.back().get();
 			m_assert(ret != nullptr);
 			return ret;
@@ -47,6 +47,18 @@ class Network {
 	protected:
 		std::vector<Input> inputs_;
 		std::vector<std::unique_ptr<Layer>> layers_;
+};
+
+class Sequential : public Network {
+	public:
+		Sequential(const Input& input): Network(input) { }
+
+		template<typename T, typename... Args>
+		Sequential& add(Args... args) {
+			Layer* last = layers_.empty() ? &inputs_[0] : Network::last();
+			Network::add(new T(last, args...));
+			return *this;
+		}
 };
 
 }
