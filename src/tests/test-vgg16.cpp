@@ -2,19 +2,24 @@
 //Author: Yuxin Wu <ppwwyyxxc@gmail.com>
 
 #include <fstream>
-#include "layers/everything.hh"
+#include <string>
 #include "common.hh"
 #include "network.hh"
 #include "testing.hh"
+#include "layers/everything.hh"
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 
 using namespace Halide;
 using namespace hadnn;
+using namespace std;
 using namespace cv;
 
-int main() {
-	auto params = read_params("vgg.tensortxt");
+int main(int argc, char* argv[]) {
+	m_assert(argc == 3);
+	string param_file = argv[1],
+				 image_file = argv[2];
+	auto params = read_params(param_file);
 
 	ImageParam placeholder(type_of<float>(), 4);
 	Input input{placeholder};
@@ -83,7 +88,7 @@ int main() {
 	auto& O = net.get_output();
 	O.print_loop_nest();
 
-	Mat im = imread("./cat.png");
+	Mat im = imread(image_file);
 	Mat imf;
 	im.convertTo(imf, CV_32FC3);
 	Mat imr;

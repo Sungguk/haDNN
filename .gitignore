@@ -32,3 +32,4 @@ obj
 *.pyc
 *.txt
 *.tensortxt
+*.npy
