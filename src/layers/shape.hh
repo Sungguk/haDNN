@@ -14,12 +14,12 @@ class ShapeExpr {
 		ShapeExpr(Halide::Expr a, Halide::Expr b, Halide::Expr c): shape_{a, b, c, -1} {}
 		ShapeExpr(Halide::Expr a, Halide::Expr b, Halide::Expr c, Halide::Expr d): shape_{a, b, c, d} {}
 
-		Halide::Expr at(int k) const {
+		Halide::Expr& at(int k) {
 			m_assert(k < 4 && k >= 0);
 			return shape_[k];
 		}
 
-		Halide::Expr operator [](int k) const { return shape_[k]; }
+		Halide::Expr& operator [](int k) { return shape_[k]; }
 	private:
 		Halide::Expr shape_[4];
 };

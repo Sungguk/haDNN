@@ -14,7 +14,7 @@ class ReLU : public Layer {
 		}
 
 		void setup() {
-			auto input = tops_[0]->get_output();
+			auto& input = tops_[0]->get_output();
 			Halide::Var x, y, z, w;
 			switch (ndim_) {
 				case 1:

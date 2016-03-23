@@ -4,11 +4,26 @@
 #pragma once
 
 #include <Halide.h>
+#include <opencv2/core.hpp>
+
 #include "layers/layer.hh"
 #include "common.hh"
 #include "lib/timer.hh"
 
 namespace hadnn {
+
+// return an image of HWCN
+Halide::Image<float> mat_to_image(cv::Mat im, int batch_size) {
+	Halide::Image<float> ret(batch_size, im.channels(), im.cols, im.rows);
+	m_assert(im.channels() == 3);
+	REP(i, im.rows) REP(j, im.cols)
+		REP(n, batch_size) {
+			cv::Vec3f c = im.at<cv::Vec3f>(i, j);
+			REP(k, im.channels())
+				ret(n, k, j, i) = c[k];
+		}
+	return ret;
+}
 
 void speedtest_single_input(
 		Halide::ImageParam& input, Halide::Func& out_func,

@@ -1,21 +1,32 @@
 //File: test-vgg.cpp
 //Author: Yuxin Wu <ppwwyyxxc@gmail.com>
 
+#include <fstream>
 #include "layers/everything.hh"
 #include "common.hh"
 #include "network.hh"
 #include "testing.hh"
+#include <opencv2/highgui.hpp>
+#include <opencv2/imgproc.hpp>
 
 using namespace Halide;
 using namespace hadnn;
+using namespace cv;
 
 int main() {
-	auto params = read_params("tests/vgg.tensortxt");
+	Mat im = imread("./cat.png");
+	Mat imf;
+	im.convertTo(imf, CV_32FC3);
+	Mat imr;
+	cv::resize(imf, imr, cv::Size(224, 224));
+	imr -= cv::Vec3f{110, 110, 110};
+	auto imH = mat_to_image(imr, 8);
+	auto params = read_params("vgg.tensortxt");
 
 	ImageParam placeholder(type_of<float>(), 4);
 	Input input{placeholder};
 
-	int B = 10, H = 224, W = 224;
+	int B = 8, H = 224, W = 224;
 
 	Network net(input);
 	auto conv11 = new Conv2D(&input,
@@ -33,5 +44,11 @@ int main() {
 
 	auto& O = net.get_output();
 	O.print_loop_nest();
-	speedtest_single_input(placeholder, O, {B, 3, W, H}, {B, 64, 112, 112});
+
+	auto out_img = random_image({B, 64, 112, 112});
+	placeholder.set(imH);
+	O.realize(out_img);
+
+	ofstream fout("dump.tensortxt");
+	write_tensor(out_img, fout);
 }

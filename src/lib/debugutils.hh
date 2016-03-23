@@ -20,6 +20,7 @@
 		std::copy(begin(arr), end(arr), std::ostream_iterator<std::remove_reference<decltype(arr)>::type::value_type>(std::cout, " ")); \
 		std::cout << std::endl;  \
 	} while (0)
+#define HP(a) Halide::print(a)
 
 void __m_assert_check__(bool val, const char *expr,
 		const char *file, const char *func, int line);
