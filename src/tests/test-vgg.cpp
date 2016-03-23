@@ -14,13 +14,6 @@ using namespace hadnn;
 using namespace cv;
 
 int main() {
-	Mat im = imread("./cat.png");
-	Mat imf;
-	im.convertTo(imf, CV_32FC3);
-	Mat imr;
-	cv::resize(imf, imr, cv::Size(224, 224));
-	REP(i, 224) REP(j, 224) imr.at<cv::Vec3f>(i, j) -= cv::Vec3f{110,110,110};
-	auto imH = mat_to_image(imr, 8);
 	auto params = read_params("vgg.tensortxt");
 
 	ImageParam placeholder(type_of<float>(), 4);
@@ -81,19 +74,25 @@ int main() {
 	// 512, 7, 7
 
 	net.add(conv11).add(relu11).add(conv12).add(relu12).add(pool1)
-		 .add(conv21).add(relu21).add(conv22).add(relu22).add(pool2)
-		 .add(conv31).add(relu31).add(conv32).add(relu32).add(conv33).add(relu33).add(pool3)
-		 .add(conv41).add(relu41).add(conv42).add(relu42).add(conv43).add(relu43).add(pool4)
-		 .add(conv51).add(relu51).add(conv52).add(relu52).add(conv53).add(relu53).add(pool5);
+		.add(conv21).add(relu21).add(conv22).add(relu22).add(pool2)
+		.add(conv31).add(relu31).add(conv32).add(relu32).add(conv33).add(relu33).add(pool3)
+		.add(conv41).add(relu41).add(conv42).add(relu42).add(conv43).add(relu43).add(pool4)
+		.add(conv51).add(relu51).add(conv52).add(relu52).add(conv53).add(relu53).add(pool5);
 	net.default_sched();
 
 	auto& O = net.get_output();
 	O.print_loop_nest();
 
+	Mat im = imread("./cat.png");
+	Mat imf;
+	im.convertTo(imf, CV_32FC3);
+	Mat imr;
+	cv::resize(imf, imr, cv::Size(224, 224));
+	REP(i, 224) REP(j, 224) imr.at<cv::Vec3f>(i, j) -= cv::Vec3f{110,110,110};
+	auto imH = mat_to_image(imr, 8);
 	auto out_img = random_image({B, 512, 7, 7});
 	placeholder.set(imH);
 	O.realize(out_img);
-
 	ofstream fout("dump.tensortxt");
 	write_tensor(out_img, fout);
 }
