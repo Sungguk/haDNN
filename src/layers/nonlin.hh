@@ -15,7 +15,6 @@ class ReLU : public Layer {
 
 		void setup() {
 			auto& input = tops_[0]->get_output();
-			Halide::Var x, y, z, w;
 			switch (ndim_) {
 				case 1:
 					output_(x) = max(input(x), 0);
@@ -42,6 +41,7 @@ class ReLU : public Layer {
 
 		ShapeExpr out_shape() const override { return tops_[0]->out_shape(); }
 
+		Halide::Var x{"relux"}, y{"reluy"}, z{"reluz"}, w{"reluw"};
 	protected:
 		int ndim_;
 

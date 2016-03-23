@@ -100,8 +100,10 @@ def run_test(path, input):
     tfout = raw_out[1][0]
 
     from tensorio import read_value
-    f = open('dump.tensortxt')
-    name, arr = read_value(f)
+    dumpf = 'dump.tensortxt'
+    with open(dumpf) as f:
+        name, arr = read_value(f)
+    os.unlink(dumpf)
     hout = arr[:,:,:,0]
     diff = hout - tfout
     maxdiff = np.abs(diff).max()

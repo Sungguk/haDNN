@@ -44,28 +44,28 @@ int main() {
 		Network net(input);
 		auto conv1 = new Conv2D(&input, random_conv_param(C[0], C[1], 3), PaddingMode::SAME);
 		auto relu1 = new ReLU(conv1);
-		auto pool1 = new Pooling(relu1, {2,2}, PaddingMode::VALID, PoolingMode::MAX);
+		auto pool1 = new Pooling(relu1, {2,2}, PoolingMode::MAX);
 		auto conv2 = new Conv2D(pool1, random_conv_param(C[1], C[2], 3), PaddingMode::SAME);
 		auto relu2 = new ReLU(conv2);
-		auto pool2 = new Pooling(relu2, {2,2}, PaddingMode::VALID, PoolingMode::MAX);
+		auto pool2 = new Pooling(relu2, {2,2}, PoolingMode::MAX);
 		// 128x56x56
 		auto conv3 = new Conv2D(pool2, random_conv_param(C[2], C[3], 3), PaddingMode::SAME);
 		auto relu3 = new ReLU(conv3);
 		auto conv4 = new Conv2D(relu3, random_conv_param(C[3], C[4], 3), PaddingMode::SAME);
 		auto relu4 = new ReLU(conv4);
-		auto pool3 = new Pooling(relu4, {2,2}, PaddingMode::VALID, PoolingMode::MAX);
+		auto pool3 = new Pooling(relu4, {2,2}, PoolingMode::MAX);
 		// 256x28x28
 		auto conv5 = new Conv2D(pool3, random_conv_param(C[4], C[5], 3), PaddingMode::SAME);
 		auto relu5 = new ReLU(conv5);
 		auto conv6 = new Conv2D(relu5, random_conv_param(C[5], C[6], 3), PaddingMode::SAME);
 		auto relu6 = new ReLU(conv6);
-		auto pool4 = new Pooling(relu6, {2,2}, PaddingMode::VALID, PoolingMode::MAX);
+		auto pool4 = new Pooling(relu6, {2,2}, PoolingMode::MAX);
 		// 512x14x14
 		auto conv7 = new Conv2D(pool4, random_conv_param(C[5], C[6], 3), PaddingMode::SAME);
 		auto relu7 = new ReLU(conv7);
 		auto conv8 = new Conv2D(relu7, random_conv_param(C[6], C[7], 3), PaddingMode::SAME);
 		auto relu8 = new ReLU(conv8);
-		auto pool5 = new Pooling(relu8, {2,2}, PaddingMode::VALID, PoolingMode::MAX);
+		auto pool5 = new Pooling(relu8, {2,2}, PoolingMode::MAX);
 		net.add(conv1).add(relu1).add(pool1)
 			 .add(conv2).add(relu2).add(pool2)
 			 .add(conv3).add(relu3).add(conv4).add(relu4).add(pool3)

@@ -53,8 +53,7 @@ class Conv2DHWCN: public Layer {
 
 		void default_sched() override;
 
-		Halide::Var Nidx{"Nidx"}, Cidx{"Cidx"}, Hidx{"Hidx"}, Widx{"Widx"};
-		//Halide::Var Nidx, Cidx, Hidx, Widx;
+		Halide::Var Nidx{"Nconv"}, Cidx{"Cconv"}, Hidx{"Hconv"}, Widx{"Wconv"};
 		Halide::Func padded;
 		Halide::RDom kernel;
 	protected:

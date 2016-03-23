@@ -55,7 +55,6 @@ int test_conv_hwcn() {
 	l2.default_sched();
 
 	auto out_func = l2.get_output();
-	out_func.compile_to_lowered_stmt("test.html", {par}, HTML);
 	out_func.print_loop_nest();
 	auto in_img = random_image({B, Cin, W, H}, "input");
 	auto out_img = random_image({B, Cout, W, H}, "output");

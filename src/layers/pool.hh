@@ -15,7 +15,7 @@ enum class PoolingMode : char {
 // HWCN Pooling
 class Pooling : public Layer {
 	public:
-		Pooling(Layer* top, Shape shape, PaddingMode padding, PoolingMode mode) :
+		Pooling(Layer* top, Shape shape, PoolingMode mode, PaddingMode padding=PaddingMode::VALID) :
 			Layer(top), shape_(shape), padding_(padding), mode_(mode) {
 				m_assert(padding_ == PaddingMode::VALID);
 				m_assert(mode_ == PoolingMode::MAX);
@@ -31,7 +31,7 @@ class Pooling : public Layer {
 			// valid mode, no need to padding
 			output_(Nidx, Cidx, Widx, Hidx)
 				= Halide::maximum(input(Nidx, Cidx, Widx * shape_[1] + kernel.x,
-						Hidx * shape_[0] + kernel.y));
+							Hidx * shape_[0] + kernel.y));
 		}
 
 		void default_sched() override {
@@ -46,17 +46,15 @@ class Pooling : public Layer {
 		ShapeExpr out_shape() const override {
 			auto top = tops_.at(0);
 			auto in_shape = top->out_shape();
-			if (padding_ == PaddingMode::VALID) {
-				in_shape[2] = in_shape[2] / shape_[1];
-				in_shape[3] = in_shape[3] / shape_[0];
-			}
+			in_shape[2] = in_shape[2] / shape_[1];
+			in_shape[3] = in_shape[3] / shape_[0];
 			return in_shape;
 		}
 
 		Halide::RDom kernel;
-		Halide::Var Nidx{"Nidx"}, Cidx{"Cidx"}, Hidx{"Hidx"}, Widx{"Widx"};
+		Halide::Var Nidx{"Npool"}, Cidx{"Cpool"}, Hidx{"Hpool"}, Widx{"Wpool"};
 	protected:
-		Shape shape_;	// pooling stride in {h, w}
+		Shape shape_;	// pooling stride in (h, w)
 		PaddingMode padding_;
 		PoolingMode mode_;
 };

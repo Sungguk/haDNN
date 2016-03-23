@@ -116,11 +116,10 @@ void Conv2DHWCN::setup() {
 				 {0, in_shape[2]}, {0, in_shape[3]}});
 
 		kernel = RDom{0, filter_[1], 0, filter_[0], 0, in_ch_, "kernel"};
-		output_(Nidx,Cidx,Widx,Hidx) = b(Cidx);
+		output_(Nidx, Cidx, Widx, Hidx) = b(Cidx);
 		output_(Nidx, Cidx, Widx, Hidx) +=
 				W(kernel.x, kernel.y, Cidx, kernel.z) *
 				padded(Nidx,kernel.z,Widx+kernel.x-1,Hidx+kernel.y-1);
-		output_.compute_root();
 	}
 }
 
