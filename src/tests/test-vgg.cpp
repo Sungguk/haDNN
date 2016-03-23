@@ -6,8 +6,8 @@
 #include "common.hh"
 #include "network.hh"
 #include "testing.hh"
-#include <opencv2/highgui.hpp>
-#include <opencv2/imgproc.hpp>
+#include <opencv2/highgui/highgui.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
 
 using namespace Halide;
 using namespace hadnn;
@@ -19,7 +19,7 @@ int main() {
 	im.convertTo(imf, CV_32FC3);
 	Mat imr;
 	cv::resize(imf, imr, cv::Size(224, 224));
-	imr -= cv::Vec3f{110, 110, 110};
+	REP(i, 224) REP(j, 224) imr.at<cv::Vec3f>(i, j) -= cv::Vec3f{110,110,110};
 	auto imH = mat_to_image(imr, 8);
 	auto params = read_params("vgg.tensortxt");
 

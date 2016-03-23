@@ -4,7 +4,7 @@
 #pragma once
 
 #include <Halide.h>
-#include <opencv2/core.hpp>
+#include <opencv2/core/core.hpp>
 
 #include "layers/layer.hh"
 #include "common.hh"
