@@ -34,6 +34,10 @@ class ReLU : public Layer {
 		}
 
 		void default_sched() override {
+			if (ndim_ == 4) {
+				Halide::Var par;
+				output_.fuse(w, z, par).parallel(par);
+			}
 			// TODO
 		}
 

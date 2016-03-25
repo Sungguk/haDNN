@@ -38,21 +38,22 @@ int main() {
 		  net.add<Pooling>(Shape{2,2}, PoolingMode::MAX);
 		};
 		add_conv_pool(0, 1);
-		add_conv_pool(1, 1);
-		// 128x56x56
+		add_conv_pool(1, 1);	//1.06s,par
+		 // 128x56x56
 		add_conv_pool(2, 2);
 		 // 256x28x28
 		add_conv_pool(4, 2);
 		 // 512x14x14
 		add_conv_pool(6, 2);
 		// 512x7x7
-		net.default_sched();
 
+		//net.add<Conv2D>(random_conv_param(128, 256, 3), PaddingMode::SAME);	// 2.2s
+		net.default_sched();
 		auto& O = net.get_output();
 		O.print_loop_nest();
 		/*
 		 *speedtest_single_input(par, net.get_output(),
-		 *    {B, C[0], W, H}, {B,256,28,28});
+		 *    {B, 128, 112, 112}, {B,256,112,112});
 		 */
 		speedtest_single_input(par, net.get_output(),
 				{B, C[0], W, H}, {B,512,7,7});

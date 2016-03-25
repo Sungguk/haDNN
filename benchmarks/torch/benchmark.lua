@@ -1,6 +1,7 @@
 require 'sys'
 
 require 'nn'
+require 'nnbhwd'
 local nets = {}
 nets[#nets+1] = require 'vgg_a'
 
