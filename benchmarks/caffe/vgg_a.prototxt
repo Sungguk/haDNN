@@ -4,16 +4,16 @@ input_dim: 64
 input_dim: 3
 input_dim: 224
 input_dim: 224
-force_backward: true
+force_backward: false
 layers {
   name: "conv1/3x3_s1"
   type: CONVOLUTION
   bottom: "data"
   top: "conv1/3x3_s1"
   blobs_lr: 1
-  blobs_lr: 2 
+  blobs_lr: 2
   weight_decay: 1
-  weight_decay: 0 
+  weight_decay: 0
   convolution_param {
     num_output: 64
     kernel_size: 3
@@ -52,9 +52,9 @@ layers {
   bottom: "pool1/2x2_s2"
   top: "conv2/3x3_s1"
   blobs_lr: 1
-  blobs_lr: 2 
+  blobs_lr: 2
   weight_decay: 1
-  weight_decay: 0 
+  weight_decay: 0
   convolution_param {
     num_output: 128
     pad: 1
@@ -93,9 +93,9 @@ layers {
   bottom: "pool2/2x2_s2"
   top: "conv3/3x3_s1"
   blobs_lr: 1
-  blobs_lr: 2 
+  blobs_lr: 2
   weight_decay: 1
-  weight_decay: 0 
+  weight_decay: 0
   convolution_param {
     num_output: 256
     kernel_size: 3
@@ -123,9 +123,9 @@ layers {
   bottom: "conv3/3x3_s1"
   top: "conv4/3x3_s1"
   blobs_lr: 1
-  blobs_lr: 2 
+  blobs_lr: 2
   weight_decay: 1
-  weight_decay: 0 
+  weight_decay: 0
   convolution_param {
     num_output: 256
     kernel_size: 3
@@ -164,9 +164,9 @@ layers {
   bottom: "pool3/2x2_s2"
   top: "conv5/3x3_s1"
   blobs_lr: 1
-  blobs_lr: 2 
+  blobs_lr: 2
   weight_decay: 1
-  weight_decay: 0 
+  weight_decay: 0
   convolution_param {
     num_output: 512
     kernel_size: 3
@@ -194,9 +194,9 @@ layers {
   bottom: "conv5/3x3_s1"
   top: "conv6/3x3_s1"
   blobs_lr: 1
-  blobs_lr: 2 
+  blobs_lr: 2
   weight_decay: 1
-  weight_decay: 0 
+  weight_decay: 0
   convolution_param {
     num_output: 512
     kernel_size: 3
@@ -235,9 +235,9 @@ layers {
   bottom: "pool4/2x2_s2"
   top: "conv7/3x3_s1"
   blobs_lr: 1
-  blobs_lr: 2 
+  blobs_lr: 2
   weight_decay: 1
-  weight_decay: 0 
+  weight_decay: 0
   convolution_param {
     num_output: 512
     kernel_size: 3
@@ -265,9 +265,9 @@ layers {
   bottom: "conv7/3x3_s1"
   top: "conv8/3x3_s1"
   blobs_lr: 1
-  blobs_lr: 2 
+  blobs_lr: 2
   weight_decay: 1
-  weight_decay: 0 
+  weight_decay: 0
   convolution_param {
     num_output: 512
     kernel_size: 3

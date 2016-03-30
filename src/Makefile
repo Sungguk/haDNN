@@ -13,7 +13,7 @@ INCLUDE_DIR += $(shell pkg-config --cflags $(PKGS))
 LDFLAGS += $(shell pkg-config $(PKGS) --libs)
 
 CXXFLAGS = $(INCLUDE_DIR) -fopenmp -Wall -Wextra
-CXXFLAGS += $(DEFINES) -std=c++14 $(OPTFLAGS)
+CXXFLAGS += $(DEFINES) -std=c++11 $(OPTFLAGS)
 
 LDFLAGS += $(OPTFLAGS) -fopenmp
 
