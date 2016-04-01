@@ -12,8 +12,8 @@
 using namespace std;
 using namespace Halide;
 using namespace hadnn;
+
 /*
- *
  *int test_conv_nchw() {
  *  int B = 64 , Cin = 3, Cout = 64, H = 224, W = 224;
  *  ImageParam par(type_of<float>(), 4);
