@@ -25,6 +25,10 @@ Func make_real(const Image<T> &re) {
 	return ret;
 }
 
+Halide::Image<float> run_4d_conv_fft(const Image<float>& img, Image<float>& W) {
+
+}
+
 // tested
 Halide::Image<float> run_conv_fft(const Image<float>& img, Image<float>& W) {
 	Var x{"x"}, y{"y"};
@@ -80,21 +84,21 @@ Image<float> run_conv(const Image<float>& img, const Image<float>& W) {
 // NCHW
 Image<float> run_4d_conv(const Image<float>& img, const Image<float>& W) {
 	int out_ch = W.extent(2);
-	Image<float> b(out_ch);
-	REP(i, out_ch) b(i) = 0;
+
+	Image<float> b(out_ch); REP(i, out_ch) b(i) = 0;
+
 	ImageParam placeholder(type_of<float>(), 4);
 	Input input{placeholder};
 	Conv2DNCHW conv(&input, {W, b}, PaddingMode::SAME);
 	conv.default_sched();
-
 	auto& O = conv.get_output();
-
-	Image<float> ret(img.extent(0), img.extent(1), img.extent(2), img.extent(3));
+	placeholder.set(img);
+	Image<float> ret(img.extent(0), img.extent(1), out_ch, img.extent(3));
 	O.realize(ret);
 	return ret;
 }
 
-int main() {
+void test_2d() {
 	ImageParam placeholder(type_of<float>(), 2);
 	int H = 8, W = 8;
 	Halide::Image<float> input_img = read_img2d("/home/wyx/proj/cat.png", H, W);
@@ -107,7 +111,18 @@ int main() {
 	write_tensor(output_conv, fout);
 	write_tensor(output_fft, fout);
 	fout.close();
+}
 
-	Input input{placeholder};
+void test_4d() {
+	ImageParam placeholder(type_of<float>(), 4);
+	int B = 10, H = 8, W = 8;
+	int in_ch = 3, out_ch = 64;
+	Halide::Image<float> input_img = read_img4d_n3hw("/home/wyx/proj/cat.png", H, W, B);
+	Halide::Image<float> Weight = random_image({3,3, out_ch, in_ch}, "Weight");
 
+	auto conv_out = run_4d_conv(input_img, Weight);
+}
+
+int main() {
+	test_4d();
 }
