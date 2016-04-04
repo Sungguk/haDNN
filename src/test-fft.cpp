@@ -25,16 +25,6 @@ Func make_real(const Image<T> &re) {
 	return ret;
 }
 
-Halide::Image<float> read_img2d(string fname, int H, int W) {
-	Mat im = imread(fname);
-	Mat imf; im.convertTo(imf, CV_32FC3);
-	Mat imr; cv::resize(imf, imr, cv::Size(W, H));
-
-	Halide::Image<float> ret(W, H, "image");
-	REP(i, H) REP(j, W) ret(j, i) = imr.at<cv::Vec3f>(i, j)[0];
-	return ret;
-}
-
 // tested
 Halide::Image<float> run_conv_fft(const Image<float>& img, Image<float>& W) {
 	Var x{"x"}, y{"y"};
@@ -84,6 +74,23 @@ Image<float> run_conv(const Image<float>& img, const Image<float>& W) {
 
 	Image<float> ret(img.extent(0), img.extent(1), "outputConv");
 	output.realize(ret);
+	return ret;
+}
+
+// NCHW
+Image<float> run_4d_conv(const Image<float>& img, const Image<float>& W) {
+	int out_ch = W.extent(2);
+	Image<float> b(out_ch);
+	REP(i, out_ch) b(i) = 0;
+	ImageParam placeholder(type_of<float>(), 4);
+	Input input{placeholder};
+	Conv2DNCHW conv(&input, {W, b}, PaddingMode::SAME);
+	conv.default_sched();
+
+	auto& O = conv.get_output();
+
+	Image<float> ret(img.extent(0), img.extent(1), img.extent(2), img.extent(3));
+	O.realize(ret);
 	return ret;
 }
 

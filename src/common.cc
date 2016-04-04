@@ -5,9 +5,12 @@
 
 #include <fstream>
 #include <sstream>
+#include <opencv2/highgui/highgui.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
 
 #include "lib/utils.hh"
 using namespace Halide;
+using namespace cv;
 
 namespace hadnn {
 
@@ -47,6 +50,40 @@ Image<float> random_image(const Shape& shape, string name) {
 		default:
 			error_exit("Unsupported Dimension");
 	}
+}
+
+Halide::Image<float> read_img2d(string fname, int H, int W) {
+	Mat im = imread(fname);
+	Mat imf; im.convertTo(imf, CV_32FC3);
+	Mat imr; cv::resize(imf, imr, cv::Size(W, H));
+
+	Halide::Image<float> ret(W, H, "image");
+	REP(i, H) REP(j, W) ret(j, i) = imr.at<cv::Vec3f>(i, j)[0];
+	return ret;
+}
+
+Halide::Image<float> read_img3d(string fname, int H, int W) {
+	Mat im = imread(fname);
+	Mat imf; im.convertTo(imf, CV_32FC3);
+	Mat imr; cv::resize(imf, imr, cv::Size(W, H));
+
+	Halide::Image<float> ret(W, H, 3, "image");
+	REP(i, H) REP(j, W)
+		REP(k, 3)
+			ret(j, i, k) = imr.at<cv::Vec3f>(i, j)[k];
+	return ret;
+}
+
+Halide::Image<float> read_img4d_n3hw(string fname, int H, int W, int N) {
+	Mat im = imread(fname);
+	Mat imf; im.convertTo(imf, CV_32FC3);
+	Mat imr; cv::resize(imf, imr, cv::Size(W, H));
+
+	Halide::Image<float> ret(W, H, 3, N, "image");
+	REP(i, H) REP(j, W)
+		REP(k, 3) REP(t, N)
+			ret(j, i, k, N) = imr.at<cv::Vec3f>(i, j)[k];
+	return ret;
 }
 
 void write_tensor(const Image<float>& v, std::ostream& os) {
