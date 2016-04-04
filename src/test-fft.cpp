@@ -15,12 +15,14 @@ using namespace cv;
 using namespace hadnn;
 using namespace Halide;
 
+
+
 template <typename T>
 Func make_real(const Image<T> &re) {
-		Var x, y;
-    Func ret;
-    ret(x, y) = re(x, y);
-    return ret;
+	Var x, y;
+	Func ret;
+	ret(x, y) = re(x, y);
+	return ret;
 }
 
 Halide::Image<float> read_img2d(string fname, int H, int W) {
@@ -44,8 +46,9 @@ Halide::Image<float> run_conv_fft(const Image<float>& img, Image<float>& W) {
 
 	int fftW = img.extent(0) + W.extent(0) / 2,
 			fftH = img.extent(1) + W.extent(1) / 2;
+	fftW = pow2roundup(fftW);
+	fftH = pow2roundup(fftH);
 	PP(fftW);
-	// TODO uppower to 2^
 
 	auto target = get_jit_target_from_environment();
 	auto img_fft = fft2d_r2c(padded, fftW, fftH, target);
@@ -76,7 +79,7 @@ Image<float> run_conv(const Image<float>& img, const Image<float>& W) {
 	Func output;
 	Var x{"x"}, y{"y"};
 	output(x, y) = Halide::sum(W(kernel.x, kernel.y) * padded(x + kernel.x - W.extent(0)/2,
-			y + kernel.y - W.extent(1)/2));
+				y + kernel.y - W.extent(1)/2));
 	output.compile_jit();
 
 	Image<float> ret(img.extent(0), img.extent(1), "outputConv");
@@ -86,7 +89,7 @@ Image<float> run_conv(const Image<float>& img, const Image<float>& W) {
 
 int main() {
 	ImageParam placeholder(type_of<float>(), 2);
-	int H = 15, W = 15;
+	int H = 8, W = 8;
 	Halide::Image<float> input_img = read_img2d("/home/wyx/proj/cat.png", H, W);
 	Halide::Image<float> Weight = random_image({3,3}, "Weight");
 	auto output_conv = run_conv(input_img, Weight);
