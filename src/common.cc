@@ -74,14 +74,15 @@ Halide::Image<float> read_img3d(string fname, int H, int W) {
 	return ret;
 }
 
-Halide::Image<float> read_img4d_n3hw(string fname, int H, int W, int N) {
+Halide::Image<float> read_img4d_n3hw(
+		string fname, int H, int W, int N, int ch) {
 	Mat im = imread(fname);
 	Mat imf; im.convertTo(imf, CV_32FC3);
 	Mat imr; cv::resize(imf, imr, cv::Size(W, H));
 
-	Halide::Image<float> ret(W, H, 3, N, "image");
+	Halide::Image<float> ret(W, H, ch, N, "image");
 	REP(i, H) REP(j, W)
-		REP(k, 3) REP(t, N)
+		REP(k, ch) REP(t, N)
 			ret(j, i, k, t) = imr.at<cv::Vec3f>(i, j)[k];
 	return ret;
 }
