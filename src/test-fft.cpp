@@ -44,19 +44,29 @@ Func collect_complex(ComplexFunc in, int dim0_extent) {
 }
 
 void cgemm_speed_test() {
-	int W = 64, H = 64, Cin = 128, N = 32, Cout = 128;
-	ComplexFunc imgfft, Wfft;
+	int W = 128, H = 128, Cin = 128, N = 64, Cout = 128;
+	ComplexFunc imgfft{"img"}, Wfft{"W"};
 	Var x{"x"}, y{"y"}, z{"z"}, w{"w"};
 	imgfft(x, y, z, w) = ComplexExpr{x + y + z + w, x-y+z-w};
 	imgfft.compute_root();
 	Wfft(x, y, z, w) = ComplexExpr{x - y - z + w, x+y+z-w};
 	Wfft.compute_root();
 
-	ComplexFunc cgemm;
-	RDom rv(0, Cin);
+	ComplexFunc cgemm{"cgemm"};
+	RDom rv(0, Cin, "RCin");
 	cgemm(x, y, z, w) = ComplexExpr{0,0};
 	cgemm(x, y, z, w) += imgfft(x, y, rv.x, w) * Wfft(x, y, z, rv.x);
 
+	cgemm.bound(x, 0, W).bound(y, 0, H/2+1).bound(z,0,Cin).bound(w,0,N);
+
+	auto&& U = cgemm.update();
+	Var zo{"zo"}, wo{"wo"}, ro{"ro"}, ri{"ri"};
+	//U.split(rv.x, ro, ri, 16);
+	//U.tile(rv.x, z, ro, zo, 16, 16);
+	U.reorder(x, y, rv.x, z, w);
+	U.vectorize(x, 8);
+
+	cgemm.print_loop_nest();
 	Image<float> cgr(W, H/2+1, Cout, N), cgi(W, H/2+1, Cout, N);
 	cgemm.compile_jit();
 	{
@@ -64,6 +74,7 @@ void cgemm_speed_test() {
 		cgemm.realize({cgr, cgi});
 	}
 
+	cgemm.compute_root();
 	Func cgemm_complex = collect_complex(cgemm, W);
 	Image<float> cgemm_out(W * 2, H / 2 + 1, Cout, N);
 	cgemm_complex.compile_jit();
@@ -118,7 +129,13 @@ Halide::Image<float> run_4d_conv_fft(const Image<float>& img, Image<float>& W) {
 	// W: [w, h/2+1, Cout, Cin]
 	ComplexFunc cgemm;
 	RDom rv(0, in_ch);
-	cgemm(x, y, z, w) = sum(img_fft(x, y, rv.x, w) * W_fft(x, y, z, rv.x));
+	cgemm(x, y, z, w) = ComplexExpr{0,0};
+	cgemm(x, y, z, w) += img_fft(x, y, rv.x, w) * W_fft(x, y, z, rv.x);
+	cgemm.bound(x, 0, fftW).bound(y, 0, fftH/2+1).bound(z,0,in_ch).bound(w,0,img.extent(3));
+	auto&& U = cgemm.update();
+	U.reorder(x, y, rv.x, z, w);
+	U.vectorize(x, 8);
+	cgemm.compute_root();
 
 	Func cgemm_complex = collect_complex(cgemm, fftW);
 	Image<float> cgemm_out(fftW * 2, fftH/2+1, out_ch, img.extent(3));
@@ -128,7 +145,6 @@ Halide::Image<float> run_4d_conv_fft(const Image<float>& img, Image<float>& W) {
 		cgemm_complex.realize(cgemm_out);
 	}
 
-	cgemm.compute_root();
 	Fft2dDesc desc; desc.gain = 1.0f / (fftW * fftH);
 	Func ifft = fft2d_c2r(cgemm, fftW, fftH, target, desc);
 	ifft.compute_root();
@@ -253,6 +269,6 @@ void test_4d() {
 
 int main() {
 	//test_2d();
-	//test_4d();
-	cgemm_speed_test();
+	test_4d();
+	//cgemm_speed_test();
 }

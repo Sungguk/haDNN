@@ -9,8 +9,8 @@ INCLUDE_DIR = -I.
 LDFLAGS += -lHalide
 
 PKGS = opencv
-INCLUDE_DIR += $(shell pkg-config --cflags $(PKGS))
-LDFLAGS += $(shell pkg-config $(PKGS) --libs)
+INCLUDE_DIR += $(shell pkg-config --cflags $(PKGS)) -I/opt/OpenBLAS/include
+LDFLAGS += -L/opt/OpenBLAS/lib -lopenblas $(shell pkg-config $(PKGS) --libs)
 
 CXXFLAGS = $(INCLUDE_DIR) -fopenmp -Wall -Wextra
 CXXFLAGS += $(DEFINES) -std=c++11 $(OPTFLAGS)
