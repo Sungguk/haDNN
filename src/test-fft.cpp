@@ -106,23 +106,25 @@ Halide::Image<float> run_4d_conv_fft(const Image<float>& img, Image<float>& W) {
 	auto target = get_jit_target_from_environment();
 	auto img_fft = fft2d_r2c(padded, fftW, fftH, target);
 	auto W_fft = fft2d_r2c(Wpadded, fftW, fftH, target);
-/*
- *  Func img_fft_complex = collect_complex(img_fft, fftW);
- *  Image<float> img_fft_out(fftW * 2, fftH / 2 + 1, img.extent(2), img.extent(3), "img_fft_out");
- *  img_fft_complex.compile_jit();
- *  {
- *    GuardedTimer tm("img_fft_out");
- *    img_fft_complex.realize(img_fft_out);
- *  }
- *
- *  Image<float> W_fft_out(fftW * 2, fftH / 2 + 1, W.extent(2), W.extent(3), "W_fft_out");
- *  Func W_fft_complex = collect_complex(W_fft, fftW);
- *  W_fft_complex.compile_jit();
- *  {
- *    GuardedTimer tm("W_fft_out");
- *    W_fft_complex.realize(W_fft_out);
- *  }
- */
+
+	/*
+	 *Func img_fft_complex = collect_complex(img_fft, fftW);
+	 *img_fft.compute_root();
+	 *Image<float> img_fft_out(fftW * 2, fftH / 2 + 1, img.extent(2), img.extent(3), "img_fft_out");
+	 *img_fft_complex.compile_jit();
+	 *{
+	 *  GuardedTimer tm("img_fft_out");
+	 *  img_fft_complex.realize(img_fft_out);
+	 *}
+	 *Image<float> W_fft_out(fftW * 2, fftH / 2 + 1, W.extent(2), W.extent(3), "W_fft_out");
+	 *Func W_fft_complex = collect_complex(W_fft, fftW);
+	 *W_fft.compute_root();
+	 *W_fft_complex.compile_jit();
+	 *{
+	 *  GuardedTimer tm("W_fft_out");
+	 *  W_fft_complex.realize(W_fft_out);
+	 *}
+	 */
 
 	// img: [w, h/2+1, Cin, N]
 	// W: [w, h/2+1, Cout, Cin]
@@ -130,19 +132,13 @@ Halide::Image<float> run_4d_conv_fft(const Image<float>& img, Image<float>& W) {
 	RDom rv(0, in_ch, "rv");
 	cgemm(x, y, z, w) = ComplexExpr{0,0};
 	cgemm(x, y, z, w) += img_fft(x, y, rv.x, w) * W_fft(x, y, z, rv.x);
-	cgemm.bound(x, 0, fftW).bound(y, 0, fftH/2+1).bound(z,0,in_ch).bound(w,0,img.extent(3));
-	auto&& U = cgemm.update();
-	U.reorder(x, y, rv.x, z, w);
-	//U.unroll(x, 8);
-	U.vectorize(x, 8);
-	//U.parallel(w);
-	//cgemm.compute_root();
+
 	W_fft.compute_root();
 	img_fft.compute_at(cgemm, w);
 
-
 	/*
 	 *Func cgemm_complex = collect_complex(cgemm, fftW);
+	 *cgemm.compute_root();
 	 *Image<float> cgemm_out(fftW * 2, fftH/2+1, out_ch, img.extent(3));
 	 *cgemm_complex.compile_jit();
 	 *{
@@ -152,22 +148,18 @@ Halide::Image<float> run_4d_conv_fft(const Image<float>& img, Image<float>& W) {
 	 */
 
 	Fft2dDesc desc; desc.gain = 1.0f / (fftW * fftH);
-	//desc.schedule_input = true;
 	Func ifft = fft2d_c2r(cgemm, fftW, fftH, target, desc);
-	//cgemm.compute_at(ifft, ifft.args().back());
-	cgemm.compute_root();
-	//ifft.compute_root();
-	//ifft.print_loop_nest();
-	ifft.compile_to_lowered_stmt("out.html", {}, HTML);
 	Func output;
 	output(x, y, z, w) = ifft(x + W.extent(0)/2, y + W.extent(1)/2, z, w);
+
+	cgemm.compute_at(ifft, w).update().reorder(x, y, rv.x, z, w).vectorize(x, 8);
+	ifft.compute_at(output, w);
+
+
 	Image<float> ifft_out(img.extent(0), img.extent(1), out_ch, img.extent(3));
 	output.compile_jit();
-	{
-		GuardedTimer tm("ifft");
-		output.realize(ifft_out);
-	}
-
+	GuardedTimer tm("ifft");
+	output.realize(ifft_out);
 	return ifft_out;
 }
 
@@ -224,8 +216,7 @@ Image<float> run_conv(const Image<float>& img, const Image<float>& W) {
 	return ret;
 }
 
-// NCHW
-Image<float> run_4d_conv(const Image<float>& img_old, const Image<float>& W) {
+Image<float> run_4d_conv_hwcn(const Image<float>& img_old, const Image<float>& W) {
 	int out_ch = W.extent(2), in_ch = W.extent(3);
 
 	Image<float> img = random_image(
@@ -241,6 +232,27 @@ Image<float> run_4d_conv(const Image<float>& img_old, const Image<float>& W) {
 	auto& O = conv.get_output();
 	placeholder.set(img);
 	Image<float> ret(img.extent(0), out_ch, img.extent(2), img.extent(3));
+	O.compile_jit();
+	{
+		GuardedTimer tm("4d conv");
+		O.realize(ret);
+	}
+	return ret;
+}
+
+// NCHW
+Image<float> run_4d_conv_nchw(const Image<float>& img, const Image<float>& W) {
+	int out_ch = W.extent(2), in_ch = W.extent(3);
+
+	Image<float> b(out_ch); REP(i, out_ch) b(i) = 0;
+
+	ImageParam placeholder(type_of<float>(), 4);
+	Input input{placeholder};
+	Conv2DNCHW conv(&input, {W, b}, PaddingMode::SAME);
+	conv.default_sched();
+	auto& O = conv.get_output();
+	placeholder.set(img);
+	Image<float> ret(img.extent(0), img.extent(1), out_ch, img.extent(3));
 	O.compile_jit();
 	{
 		GuardedTimer tm("4d conv");
@@ -266,12 +278,12 @@ void test_2d() {
 
 void test_4d() {
 	ImageParam placeholder(type_of<float>(), 4);
-	int B = 128, H = 30, W = 30;
+	int B = 64, H = 31, W = 31;
 	int in_ch = 128, out_ch = 128;
 	Halide::Image<float> input_img = read_img4d_n3hw("/home/wyx/proj/cat.png", H, W, B, in_ch);
 	Halide::Image<float> Weight = random_image({3,3, out_ch, in_ch}, "Weight");
 
-	auto conv_out = run_4d_conv(input_img, Weight);
+	auto conv_out = run_4d_conv_hwcn(input_img, Weight);
 	auto fft_out = run_4d_conv_fft(input_img, Weight);
 
 	ofstream fout("param.tensortxt");
@@ -294,14 +306,23 @@ void full_example() {
 	RDom rv(0, Cin, "rv");
 	cgemm(x, y, z, n) = ComplexExpr{0,0};
 	cgemm(x, y, z, n) += dft_img(x, y, rv.x, n) * dft_kernel(x, y, rv.x, z);
+	cgemm.bound(x, 0, W).bound(y, 0, H/2+1).bound(z,0,Cout).bound(n,0,N);
+	//cgemm(x, y, z, n) = sum(dft_img(x, y, rv.x, n) * dft_kernel(x, y, rv.x, z));
 	Func result = fft2d_c2r(cgemm, W, H, target);
 
-	dft_img.compute_at(cgemm, n);
+	//dft_img.compute_at(cgemm, n);
 	dft_kernel.compute_root();
+	dft_img.compute_root();
+	cgemm.compute_at(result, n).update().reorder(x, y, rv.x, z, n).vectorize(x, 8);
+	//cgemm.compute_root().update().reorder(x, y, rv.x, z, n);
+	/*
+	 *dft_img.compute_at(cgemm, rv.x);
+	 *dft_kernel.compute_root();
+	 *cgemm.compute_at(result, n);
+	 *cgemm.update(0).reorder(x, y, z, rv.x, n).vectorize(x, target.natural_vector_size<float>());
+	 */
 
-	auto&& U = cgemm.update();
-	U.reorder(x, y, rv.x, z, n).vectorize(x, 8);
-	cgemm.compute_root();
+
 	result.compute_root();
 
 	Image<float> output(W, H, Cout, N);

@@ -76,8 +76,8 @@ inline ComplexExpr operator*(ComplexExpr a, ComplexExpr b) {
 		 *return ComplexExpr(re(b) * (im(a) - re(a)) + uavc,
 		 *    uavc - im(b) * (re(a) + im(a)));
 		 */
-    return ComplexExpr(re(a) * re(b) - im(a) * im(b),
-                       re(a) * im(b) + im(a) * re(b));
+		return ComplexExpr(re(a) * re(b) - im(a) * im(b),
+											 re(a) * im(b) + im(a) * re(b));
 }
 inline ComplexExpr operator*(ComplexExpr a, Halide::Expr b) {
     return ComplexExpr(re(a) * b, im(a) * b);

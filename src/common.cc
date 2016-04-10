@@ -83,7 +83,7 @@ Halide::Image<float> read_img4d_n3hw(
 	Halide::Image<float> ret(W, H, ch, N, "image");
 	REP(i, H) REP(j, W)
 		REP(k, ch) REP(t, N)
-			ret(j, i, k, t) = imr.at<cv::Vec3f>(i, j)[k];
+			ret(j, i, k, t) = imr.at<cv::Vec3f>(i, j)[k%3] / 255.0;
 	return ret;
 }
 

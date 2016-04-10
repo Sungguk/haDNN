@@ -39,6 +39,9 @@ def test_all():
     _, W = read_value(fin)
     _, conv_out = read_value(fin)
     _, fft_out = read_value(fin)
+    #conv_out = conv_out.transpose([3,2,0,1])
+    diff = conv_out - fft_out
+    print diff.max(), diff.min()
     from IPython import embed; embed()
 
 if __name__ == '__main__':
