@@ -12,6 +12,9 @@ def test_nchw():
     f = open('conv_nchw_out.txt', 'r')
     W, b, input = read_to_tf_var(f, 3)
     _, output = read_value(f)
+    print("W", W.get_shape())
+    print("input", input.get_shape())
+    print("output", output.shape)
     # W: in, out, h, w
 
     conv_out = tf.nn.conv2d(input, tf.transpose(W, (2, 3, 0, 1)), strides=[1,1,1,1],
@@ -24,6 +27,7 @@ def test_nchw():
         result = result.eval()
         print(time.time())
         diff = np.max(result - output)
+        print diff
         assert diff < 1e-5, diff
 
 def test_hwcn():
@@ -63,4 +67,5 @@ def test_hwcn():
 
 
 if __name__ == '__main__':
-    test_hwcn()
+    #test_hwcn()
+    test_nchw()

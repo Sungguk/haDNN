@@ -3,6 +3,8 @@
 
 #include "convfft.hh"
 #include "fft/fft.h"
+#include "lib/utils.hh"
+#include "lib/debugutils.hh"
 
 using namespace Halide;
 
@@ -31,40 +33,58 @@ void Conv2DNCHWFFT::setup() {
 	filter_ = {W.extent(1), W.extent(0)};
 	out_ch_ = W.extent(2);
 	in_ch_ = W.extent(3);
+	fft_shape_ = Shape{pow2roundup(in_shape_[0] + W.extent(1)/2),
+										 pow2roundup(in_shape_[1] + W.extent(0)/2)};
+	print_debug("FFT shape: %d, %d\n", fft_shape_[0], fft_shape_[1]);
+	if (max(fft_shape_[0], fft_shape_[1]) >= 256) {
+		print_debug("FFT for shape >= 256 might be buggy.\n");
+	}
 	m_assert(b.extent(0) == out_ch_);
 
 	auto top = tops_.at(0);
+	ShapeExpr in_shape_expr = top->out_shape();
 	auto input = top->get_output();
 	m_assert(input.dimensions() == 4);
 
 	// see doc, maybe don't need this
-	Func Wfunc; Wfunc(Nidx, Cidx, Widx, Hidx) = W(Nidx, Cidx, Widx, Hidx);
-	Func padded_kernel = BoundaryConditions::constant_exterior(
-			Wfunc, 0,
-			{{0, filter_[1]}, {0, filter_[0]},
-			{0, out_ch_}, {0, in_ch_}});	// XXX wrong offset
+	Func Wfunc;
+	Wfunc(Widx, Hidx, Coutidx, Cidx) = W(W.extent(0)-1-Widx, W.extent(1)-1-Hidx, Coutidx, Cidx);
+	Func Wpadded = BoundaryConditions::constant_exterior(Wfunc, 0,
+			{{0, filter_[1]}, {0, filter_[0]}, {0, out_ch_}, {0, in_ch_}});
+
+	Func padded = BoundaryConditions::constant_exterior(input, 0,
+			{{0, in_shape_[1]}, {0, in_shape_[0]}, {0, in_ch_}, {0, in_shape_expr[3]}});
 	auto target = get_jit_target_from_environment();
-	auto kernel_fft = fft2d_r2c(padded_kernel, in_shape_[1], in_shape_[0], target);
 
-	auto img_fft = fft2d_r2c(input, in_shape_[1], in_shape_[0], target);
-	img_fft.compute_root();
-	ComplexFunc mult("fft_mult");
-	mult(Widx, Hidx, Cidx, Nidx) = kernel_fft(Widx, Hidx, Cidx, Nidx) * img_fft(Widx, Hidx, Cidx, Nidx);
+	Fft2dDesc desc;
+	desc.name = "imgfft";
+	img_fft = fft2d_r2c(padded, fft_shape_[1], fft_shape_[0], target, desc);
+	desc.name = "Wfft";
+	W_fft = fft2d_r2c(Wpadded, fft_shape_[1], fft_shape_[0], target);
 
-	mult.compute_root();
+	rv = RDom{0, in_ch_, "rv"};
+	cgemm(Widx, Hidx, Coutidx, Nidx) = ComplexExpr{0, 0};
+	cgemm(Widx, Hidx, Coutidx, Nidx) += img_fft(Widx, Hidx, rv.x, Nidx) * W_fft(Widx, Hidx, Coutidx, rv.x);
 
-	Fft2dDesc inv_desc;
-	inv_desc.gain = 1.0f / (in_shape_[0] * in_shape_[1]);
-
-	output_ = fft2d_c2r(img_fft, in_shape_[1], in_shape_[0], target, inv_desc);
+	desc.gain = 1.0f / (fft_shape_[0] * fft_shape_[1]);
+	desc.name = "ifft";
+	ifft = fft2d_c2r(cgemm, fft_shape_[1], fft_shape_[0], target, desc);
+	output_(Widx, Hidx, Cidx, Nidx) = ifft(Widx + W.extent(0)/2, Hidx + W.extent(1)/2, Cidx, Nidx) + b(Cidx);
 }
 
 void Conv2DNCHWFFT::default_sched() {
+	// TODO parallel
+	W_fft.compute_root();
+	img_fft.compute_at(cgemm, Nidx);
 
+	auto&& U = cgemm.update();
+	U.reorder(Widx, Hidx, rv.x, Coutidx, Nidx).vectorize(Widx, 8);
+
+	cgemm.compute_at(ifft, Nidx);
+	ifft.compute_at(output_, Nidx);
 }
 
 ShapeExpr Conv2DNCHWFFT::out_shape() const {
-	// XXX copied
 	auto top = tops_.at(0);
 	auto in_shape = top->out_shape();
 	in_shape[2] = out_ch_;

@@ -4,6 +4,7 @@
 #pragma once
 
 #include "layer.hh"
+#include "fft/complex.h"
 
 namespace hadnn {
 
@@ -26,11 +27,13 @@ class Conv2DNCHWFFT : public Layer {
 		void default_sched() override;
 
 
-		Halide::Func padded_kernel;
-		Halide::Var Nidx{"Nidx"}, Cidx{"Cidx"}, Widx{"Widx"}, Hidx{"Hidx"};
+		Halide::Func ifft;
+		ComplexFunc cgemm{"cgemm"}, W_fft, img_fft;
+		Halide::RDom rv;
+		Halide::Var Nidx{"Nidx"}, Cidx{"Cidx"}, Widx{"Widx"}, Hidx{"Hidx"}, Coutidx{"Coutidx"};
 	protected:
 		PaddingMode padding_;
-		Shape stride_, filter_, in_shape_;
+		Shape stride_, filter_, in_shape_, fft_shape_;
 		int out_ch_, in_ch_;
 };
 

@@ -7,39 +7,63 @@
 #include "lib/debugutils.hh"
 #include "common.hh"
 #include "layers/conv.hh"
+#include "layers/convfft.hh"
 #include "layers/data.hh"
 
 using namespace std;
 using namespace Halide;
 using namespace hadnn;
 
-/*
- *int test_conv_nchw() {
- *  int B = 64 , Cin = 3, Cout = 64, H = 224, W = 224;
- *  ImageParam par(type_of<float>(), 4);
- *
- *  Input input{par};
- *  auto paraW = random_image({3, 3, Cout, Cin}, "W"),
- *       parab = random_image({Cout}, "b");
- *  vector<Image<float>> params{paraW, parab};
- *  Conv2DNCHW l(&input, params, PaddingMode::SAME);
- *  l.default_sched();
- *
- *  auto out_func = l.get_output();
- *  auto in_img = random_image({W, H, Cin, B}, "input");
- *  auto out_img = random_image({W, H, Cout, B}, "output");
- *  par.set(in_img);
- *  out_func.realize(out_img);
- *
- *  ofstream fout("conv_nchw_out.txt");
- *  write_tensor(paraW, fout);
- *  write_tensor(parab, fout);
- *  write_tensor(in_img, fout);
- *  write_tensor(out_img, fout);
- *}
- */
+void test_conv_nchw() {
+	int B = 64 , Cin = 3, Cout = 64, H = 224, W = 224;
+	ImageParam par(type_of<float>(), 4);
 
-int test_conv_hwcn() {
+	Input input{par};
+	auto paraW = random_image({3, 3, Cout, Cin}, "W"),
+			 parab = random_image({Cout}, "b");
+	vector<Image<float>> params{paraW, parab};
+	Conv2DNCHW l(&input, params, PaddingMode::SAME);
+	l.default_sched();
+
+	auto out_func = l.get_output();
+	auto in_img = random_image({W, H, Cin, B}, "input");
+	auto out_img = random_image({W, H, Cout, B}, "output");
+	par.set(in_img);
+	out_func.realize(out_img);
+
+	ofstream fout("conv_nchw_out.txt");
+	write_tensor(paraW, fout);
+	write_tensor(parab, fout);
+	write_tensor(in_img, fout);
+	write_tensor(out_img, fout);
+}
+
+void test_conv_nchw_fft() {
+	int B = 64 , Cin = 3, Cout = 64, H = 127, W = 127;
+	ImageParam par(type_of<float>(), 4);
+
+	Input input{par};
+	auto paraW = random_image({3, 3, Cout, Cin}, "W"),
+			 parab = random_image({Cout}, "b");
+	vector<Image<float>> params{paraW, parab};
+	Conv2DNCHWFFT l(&input, params, {H, W}, PaddingMode::SAME);
+	l.default_sched();
+
+	auto out_func = l.get_output();
+	auto in_img = random_image({W, H, Cin, B}, "input");
+	auto out_img = random_image({W, H, Cout, B}, "output");
+	par.set(in_img);
+	out_func.realize(out_img);
+	PP("HERE");
+
+	ofstream fout("conv_nchw_out.txt");
+	write_tensor(paraW, fout);
+	write_tensor(parab, fout);
+	write_tensor(in_img, fout);
+	write_tensor(out_img, fout);
+}
+
+void test_conv_hwcn() {
 	int B = 8 , Cin = 4, Cout = 16, H = 224, W = 224;
 	ImageParam par(type_of<float>(), 4);
 
@@ -71,5 +95,7 @@ int test_conv_hwcn() {
 }
 
 int main() {
-	test_conv_hwcn();
+	//test_conv_hwcn();
+	//test_conv_nchw();
+	test_conv_nchw_fft();
 }

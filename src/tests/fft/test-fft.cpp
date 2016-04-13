@@ -44,7 +44,7 @@ Func collect_complex(ComplexFunc in, int dim0_extent) {
 }
 
 void cgemm_speed_test() {
-	int W = 64, H = 64, Cin = 128, N = 64, Cout = 128;
+	int W = 32, H = 32, Cin = 128, N = 64, Cout = 128;
 	ComplexFunc imgfft{"img"}, Wfft{"W"};
 	Var x{"x"}, y{"y"}, z{"z"}, w{"w"};
 	imgfft(x, y, z, w) = ComplexExpr{x + y + z + w, x-y+z-w};
@@ -56,25 +56,27 @@ void cgemm_speed_test() {
 	cgemm(x, y, z, w) = ComplexExpr{0,0};
 	cgemm(x, y, z, w) += imgfft(x, y, rv.x, w) * Wfft(x, y, z, rv.x);
 
-	cgemm.bound(x, 0, W).bound(y, 0, H/2+1).bound(z,0,Cin).bound(w,0,N);
+//	cgemm.bound(x, 0, W).bound(y, 0, H/2+1).bound(z,0,Cin).bound(w,0,N);
 
-	imgfft.compute_at(cgemm, w);
+	imgfft.compute_root();
 	Wfft.compute_root();
 	auto&& U = cgemm.update();
-	Var zo{"zo"}, wo{"wo"}, ro{"ro"}, ri{"ri"};
-	U.reorder(x, y, rv.x, z, w);
-	U.vectorize(x, 8).unroll(x, W / 8);
-	//U.vectorize(x, 8);
 
-	cgemm.print_loop_nest();
-	Image<float> cgr(W, H/2+1, Cout, N), cgi(W, H/2+1, Cout, N);
-	cgemm.compile_jit();
-	{
-		GuardedTimer tm("Cgemm_out");
-		cgemm.realize({cgr, cgi});
-	}
+	cgemm.reorder_storage(z, w, x, y);
+	U.reorder(z, rv.x, w, x, y);
+	U.vectorize(z, 8);
+
+	/*
+	 *Var zo{"zo"}, wo{"wo"}, zi{"zi"};
+	 *RVar rvi{"rvi"}, rvo{"rvo"};
+	 *U.split(z, zo, zi, 4);
+	 *U.reorder(x, y, zi, rv.x, zo, w);
+	 * //U.reorder(x, y, rv.x, z, w);
+	 *U.vectorize(x, 8).unroll(x, W / 8);
+	 */
 
 	cgemm.compute_root();
+	cgemm.print_loop_nest();
 	Func cgemm_complex = collect_complex(cgemm, W);
 	Image<float> cgemm_out(W * 2, H / 2 + 1, Cout, N);
 	cgemm_complex.compile_jit();
@@ -135,15 +137,19 @@ Halide::Image<float> run_4d_conv_fft(const Image<float>& img, Image<float>& W) {
 
 	W_fft.compute_root();
 	img_fft.compute_at(cgemm, w);
+	//img_fft.compute_root();
 
+	cgemm.compute_root();
+	Image<float> cgemm_outr(fftW, fftH/2+1, out_ch, img.extent(3)),
+						cgemm_outi(fftW, fftH/2+1, out_ch, img.extent(3));
+
+	cgemm.update().reorder(x, y, rv.x, z, w).vectorize(x, 8);
 	/*
-	 *Func cgemm_complex = collect_complex(cgemm, fftW);
 	 *cgemm.compute_root();
-	 *Image<float> cgemm_out(fftW * 2, fftH/2+1, out_ch, img.extent(3));
-	 *cgemm_complex.compile_jit();
+	 *cgemm.compile_jit();
 	 *{
 	 *  GuardedTimer tm("cgemm_out");
-	 *  cgemm_complex.realize(cgemm_out);
+	 *  cgemm.realize({cgemm_outr, cgemm_outi});
 	 *}
 	 */
 
@@ -152,12 +158,12 @@ Halide::Image<float> run_4d_conv_fft(const Image<float>& img, Image<float>& W) {
 	Func output;
 	output(x, y, z, w) = ifft(x + W.extent(0)/2, y + W.extent(1)/2, z, w);
 
-	cgemm.compute_at(ifft, w).update().reorder(x, y, rv.x, z, w).vectorize(x, 8);
+	cgemm.compute_at(ifft, w);//.update().reorder(x, y, rv.x, z, w).vectorize(x, 8);
 	ifft.compute_at(output, w);
 
 
 	Image<float> ifft_out(img.extent(0), img.extent(1), out_ch, img.extent(3));
-	output.compile_jit();
+	output.compile_jit(target);
 	GuardedTimer tm("ifft");
 	output.realize(ifft_out);
 	return ifft_out;
@@ -242,7 +248,7 @@ Image<float> run_4d_conv_hwcn(const Image<float>& img_old, const Image<float>& W
 
 // NCHW
 Image<float> run_4d_conv_nchw(const Image<float>& img, const Image<float>& W) {
-	int out_ch = W.extent(2), in_ch = W.extent(3);
+	int out_ch = W.extent(2);
 
 	Image<float> b(out_ch); REP(i, out_ch) b(i) = 0;
 
@@ -278,7 +284,7 @@ void test_2d() {
 
 void test_4d() {
 	ImageParam placeholder(type_of<float>(), 4);
-	int B = 64, H = 31, W = 31;
+	int B = 64, H = 15, W = 15;
 	int in_ch = 128, out_ch = 128;
 	Halide::Image<float> input_img = read_img4d_n3hw("/home/wyx/proj/cat.png", H, W, B, in_ch);
 	Halide::Image<float> Weight = random_image({3,3, out_ch, in_ch}, "Weight");
@@ -333,7 +339,7 @@ void full_example() {
 
 int main() {
 	//test_2d();
-	//test_4d();
+	test_4d();
 	//cgemm_speed_test();
-	full_example();
+	//full_example();
 }
