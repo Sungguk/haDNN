@@ -5,6 +5,7 @@
 
 #include "layer.hh"
 #include "conv.hh"
+#include "convfft.hh"
 #include "pool.hh"
 #include "data.hh"
 #include "nonlin.hh"

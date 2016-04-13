@@ -6,11 +6,7 @@
 #include "lib/debugutils.hh"
 #include "testing.hh"
 
-#include "layers/softmax.hh"
-#include "layers/conv.hh"
-#include "layers/pool.hh"
-#include "layers/nonlin.hh"
-#include "layers/data.hh"
+#include "layers/everything.hh"
 #include "network.hh"
 
 using namespace std;
@@ -96,7 +92,24 @@ void speed_test_conv_hwcn() {
 	}
 }
 
+void speed_test_conv_nchw_fft() {
+	ImageParam par(type_of<float>(), 4);
+	Input input{par};
+
+	int B = 64;
+	int H = 48, W = 48;
+	Conv2DNCHWFFT l(&input, random_conv_param(3, 3, 3),
+			{H, W}, PaddingMode::SAME);
+
+	l.default_sched();
+	auto& O = l.get_output();
+	O.print_loop_nest();
+	P("NCHWFFT:");
+	speedtest_single_input(par, O, {W, H, 3, B}, {W, H, 3, B});
+}
+
 int main() {
 //	speed_test_conv_hwcn();
-	speed_test_conv_nchw();
+//	speed_test_conv_nchw();
+	speed_test_conv_nchw_fft();
 }
