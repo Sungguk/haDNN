@@ -87,37 +87,6 @@ Halide::Image<float> read_img4d_n3hw(
 	return ret;
 }
 
-void write_tensor(const Image<float>& v, std::ostream& os) {
-	os << const_cast<Image<float>&>(v).name();
-	for (int d = v.dimensions()-1; d >= 0; d--)
-		os << " " << v.extent(d);
-	os << endl;
-	switch (v.dimensions()) {
-		case 1:
-			REP(i, v.extent(0))
-				os.write((char*)&v(i), sizeof(float));
-			break;
-		case 2:
-			REP(j, v.extent(1))
-				REP(i, v.extent(0))
-					os.write((char*)&v(i, j), sizeof(float));
-			break;
-		case 3:
-			REP(k, v.extent(2))
-				REP(j, v.extent(1))
-					REP(i, v.extent(0))
-					  os.write((char*)&v(i, j, k), sizeof(float));
-			break;
-		case 4:
-			REP(l, v.extent(3))
-				REP(k, v.extent(2))
-					REP(j, v.extent(1))
-						REP(i, v.extent(0))
-					    os.write((char*)&v(i, j, k, l), sizeof(float));
-			break;
-	}
-}
-
 unordered_map<string, Image<float>> read_params(string fname) {
 	unordered_map<string, Image<float>> ret;
 	ifstream fin(fname);
