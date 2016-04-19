@@ -79,6 +79,7 @@ void Conv2DNCHWFFT::default_sched() {
 
 	auto&& U = cgemm.update();
 	U.reorder(Widx, Hidx, rv.x, Coutidx, Nidx).vectorize(Widx, 8);
+	U.parallel(Coutidx);	// seems too naive. only 2x speedup
 
 	cgemm.compute_at(ifft, Nidx);
 	ifft.compute_at(output_, Nidx);

@@ -1,4 +1,4 @@
-//File: main.cpp
+//File: benchmark.cpp
 //Author: Yuxin Wu <ppwwyyxx@gmail.com>
 
 #include <vector>
@@ -22,17 +22,12 @@ void benchmark_speed_test_conv_hwcn(int B, int H, int W, int k, int cin, int cou
 	Input input{par};
 	{
 		Sequential net(input);
-		net.add<Conv2D>(random_conv_param(cin, cout, k), PaddingMode::SAME)
-		   .add<ReLU>();
-		// net.add<Pooling>(Shape{2,2}, PoolingMode::MAX);
-
+		net.add<Conv2D>(random_conv_param(cin, cout, k), PaddingMode::SAME);
 		net.default_sched();
 		// auto& O = net.get_output();
 		// O.print_loop_nest();
-
-		P("HWCN:");
 		speedtest_single_input(par, net.get_output(),
-				{B, cin, W, H}, {B, cout, W, H});
+				{B, cin, W, H}, {B, cout, W, H}, "ConvHWCN");
 	}
 }
 
@@ -49,8 +44,7 @@ void benchmark_speed_test_conv_nchw_fft(int B, int H, int W, int k, int cin, int
 	// auto& O = l.get_output();
 	// O.print_loop_nest();
 
-	P("NCHWFFT:");
-	speedtest_single_input(par, l.get_output(), {W, H, cin, B}, {W, H, cout, B});
+	speedtest_single_input(par, l.get_output(), {W, H, cin, B}, {W, H, cout, B}, "NCHWFFT");
 }
 
 int main(int argc, char const *argv[])

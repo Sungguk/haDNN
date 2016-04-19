@@ -96,16 +96,17 @@ void speed_test_conv_nchw_fft() {
 	ImageParam par(type_of<float>(), 4);
 	Input input{par};
 
-	int B = 64;
-	int H = 48, W = 48;
-	Conv2DNCHWFFT l(&input, random_conv_param(3, 3, 3),
+	int B = 128;
+	int H = 63, W = 63;
+	int Cin = 64, Cout = 64;
+	Conv2DNCHWFFT l(&input, random_conv_param(Cin, Cout, 3),
 			{H, W}, PaddingMode::SAME);
 
 	l.default_sched();
 	auto& O = l.get_output();
-	O.print_loop_nest();
+	//O.print_loop_nest();
 	P("NCHWFFT:");
-	speedtest_single_input(par, O, {W, H, 3, B}, {W, H, 3, B});
+	speedtest_single_input(par, O, {W, H, Cin, B}, {W, H, Cout, B});
 }
 
 int main() {

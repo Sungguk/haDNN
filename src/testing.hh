@@ -28,13 +28,15 @@ Halide::Image<float> mat_to_image(cv::Mat im, int batch_size) {
 
 void speedtest_single_input(
 		Halide::ImageParam& input, Halide::Func& out_func,
-		const Shape& in_shape, const Shape& out_shape) {
+		const Shape& in_shape, const Shape& out_shape, string name="") {
 	auto in_img = random_image(in_shape);
 	auto out_img = random_image(out_shape);
 	input.set(in_img);
 	out_func.compile_jit();
+	if (name.length() == 0)
+		name = "Realize Time";
 	{
-		GuardedTimer tm("Realize Time");
+		GuardedTimer tm(name);
 		out_func.realize(out_img);
 	}
 };
