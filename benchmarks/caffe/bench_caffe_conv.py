@@ -3,7 +3,8 @@
 # File: bench_caffe_conv.py
 # Author: Yuxin Wu <ppwwyyxx@gmail.com>
 import sys, os
-CAFFE_ROOT="/home/wyx/software/caffe-cpu/"
+#CAFFE_ROOT="/home/wyx/software/caffe-cpu/"
+CAFFE_ROOT="/home/wyx/System/installation/caffe/"
 os.environ['LD_LIBRARY_PATH']='/opt/OpenBLAS/lib'
 
 TEMPLATE = """
@@ -30,7 +31,7 @@ layers {{
 B, H, W, k, Cin, Cout = sys.argv[1:]
 pad = int(k) / 2
 proto = TEMPLATE.format(**locals())
-print proto
+#print proto
 
 with open('proto.prototxt', 'w') as f:
     f.write(proto)
