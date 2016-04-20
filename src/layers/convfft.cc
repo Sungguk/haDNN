@@ -75,14 +75,18 @@ void Conv2DNCHWFFT::setup() {
 void Conv2DNCHWFFT::default_sched() {
 	// TODO parallel
 	W_fft.compute_root();
-	img_fft.compute_at(cgemm, Nidx);
+	img_fft.compute_root();
+	//img_fft.compute_at(cgemm, Nidx);
 
 	auto&& U = cgemm.update();
-	U.reorder(Widx, Hidx, rv.x, Coutidx, Nidx).vectorize(Widx, 8);
+	U.reorder(Widx, Hidx, rv.x, Coutidx, Nidx);
+	//U.vectorize(Widx, 8);
 	U.parallel(Coutidx);	// seems too naive. only 2x speedup
 
 	cgemm.compute_at(ifft, Nidx);
 	ifft.compute_at(output_, Nidx);
+	//cgemm.compute_root();
+	//ifft.compute_root();
 }
 
 ShapeExpr Conv2DNCHWFFT::out_shape() const {
