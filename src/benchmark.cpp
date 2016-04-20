@@ -31,6 +31,20 @@ void benchmark_speed_test_conv_hwcn(int B, int H, int W, int k, int cin, int cou
 	}
 }
 
+void benchmark_speed_test_conv_nchw(int B, int H, int W, int k, int cin, int cout) {
+	ImageParam par(type_of<float>(), 4);
+	Input input{par};
+
+	Sequential net(input);
+	net.add<Conv2DNCHW>(random_conv_param(cin, cout, k), PaddingMode::SAME)
+	   .add<ReLU>();
+
+	net.default_sched();
+	P("NCHW:");
+	speedtest_single_input(par, net.get_output(),
+			{W, H, cin, B}, {W, H, cout,  B});
+}
+
 void benchmark_speed_test_conv_nchw_fft(int B, int H, int W, int k, int cin, int cout) {
 	ImageParam par(type_of<float>(), 4);
 	Input input{par};
@@ -50,7 +64,7 @@ void benchmark_speed_test_conv_nchw_fft(int B, int H, int W, int k, int cin, int
 int main(int argc, char const *argv[])
 {
 	if (argc != 8) {
-		printf("Usage: <normal/fft> B H W k cin cout\n");
+		printf("Usage: < normal_hwcn / normal_nchw / fft_nchw > B H W k cin cout\n");
 		return -1;
 	}
 	const char* type = argv[1];
@@ -60,10 +74,13 @@ int main(int argc, char const *argv[])
 	int k = atoi(argv[5]);
 	int cin = atoi(argv[6]);
 	int cout = atoi(argv[7]);
-	if (strcmp(type, "normal") == 0) {
+	if (strcmp(type, "normal_hwcn") == 0) {
 		benchmark_speed_test_conv_hwcn(B, H, W, k, cin, cout);
 	}
-	if (strcmp(type, "fft") == 0) {
+	if (strcmp(type, "normal_nchw") == 0) {
+		benchmark_speed_test_conv_nchw(B, H, W, k, cin, cout);
+	}
+	if (strcmp(type, "fft_nchw") == 0) {
 		benchmark_speed_test_conv_nchw_fft(B, H, W, k, cin, cout);
 	}
 	return 0;
