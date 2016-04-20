@@ -3,8 +3,8 @@
 # File: bench_caffe_conv.py
 # Author: Yuxin Wu <ppwwyyxx@gmail.com>
 import sys, os
-#CAFFE_ROOT="/home/wyx/software/caffe-cpu/"
-CAFFE_ROOT="/home/wyx/System/installation/caffe/"
+CAFFE_ROOT="/home/wyx/software/caffe-cpu/"
+#CAFFE_ROOT="/home/wyx/System/installation/caffe/"
 os.environ['LD_LIBRARY_PATH']='/opt/OpenBLAS/lib'
 
 TEMPLATE = """
