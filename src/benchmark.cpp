@@ -64,7 +64,7 @@ void benchmark_speed_test_conv_nchw_fft(int B, int H, int W, int k, int cin, int
 int main(int argc, char const *argv[])
 {
 	if (argc != 8) {
-		printf("Usage: < normal_hwcn / normal_nchw / fft_nchw > B H W k cin cout\n");
+		printf("Usage: < normal_hwcn normal_nchw fft_nchw > B H W k cin cout\n");
 		return -1;
 	}
 	const char* type = argv[1];

@@ -1,0 +1,43 @@
+name: "benchmark_single_layer"
+input: "data"
+# http://caffe.berkeleyvision.org/tutorial/net_layer_blob.html
+# https://github.com/BVLC/caffe/issues/998
+# N x K x H x W
+input_dim: ${B}   # batch eg. 128
+input_dim: ${cin} # channel cin eg. 3
+input_dim: ${H}   # height eg. 60
+input_dim: ${W}   # width eg. 60
+force_backward: false
+# http://caffe.berkeleyvision.org/tutorial/layers.html
+#  convolution_param
+layers {
+  name: "conv1/3x3_s1"
+  type: CONVOLUTION
+  bottom: "data"
+  top: "conv1/3x3_s1"
+  blobs_lr: 0
+  blobs_lr: 0
+  weight_decay: 1
+  weight_decay: 0
+  convolution_param {
+    num_output: ${cout}  # the number of filters
+    kernel_size: ${k}    # specifies height and width of each filter
+    pad: 1
+    stride: 1
+    weight_filler {
+      type: "xavier"
+      std: 0.1
+    }
+    #  specifies whether to learn and apply a set of additive biases to the filter outputs
+    bias_filler {            
+      type: "constant"
+      value: 0.2
+    }
+  }
+}
+layers {
+  name: "conv1/relu"
+  type: RELU
+  bottom: "conv1/3x3_s1"
+  top: "conv1/3x3_s1"
+}

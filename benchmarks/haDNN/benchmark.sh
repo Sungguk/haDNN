@@ -1,7 +1,7 @@
 #!/bin/bash -e
 
-mkdir results;
-rm results/*;
+mkdir -p results;
+rm -f results/*;
 
 function run {
     echo "Running $1 $2 $3 $4 $5 $6 for 5 times";
@@ -10,7 +10,7 @@ function run {
     done
 }
 
-for type in normal fft; do
+for type in normal_hwcn normal_nchw fft_nchw; do
 for B in 1 64 128; do
     for H in 14 30 62 126 224; do
         W=$H
