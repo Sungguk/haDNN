@@ -2,6 +2,8 @@
 # File: run-parser.sh
 # Author: Yuxin Wu <ppwwyyxxc@gmail.com>
 
+# parse logs produced by parse-log.py for plotting
+
 PREFIX=$1
 
 python2 parse-log.py "$PREFIX".log > "$PREFIX".data

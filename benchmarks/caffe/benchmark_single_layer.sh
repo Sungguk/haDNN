@@ -1,6 +1,5 @@
 #!/bin/bash -e
-# File: run.sh
-# Author: Yuxin Wu <ppwwyyxx@gmail.com>
+# File: benchmark_single_layer.sh
 
 NETWORK=./single_layer.prototxt
 # CAFFE_ROOT=$HOME/software/caffe-cpu/

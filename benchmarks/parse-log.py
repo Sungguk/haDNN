@@ -7,6 +7,10 @@ import sys
 import re
 lines = open(sys.argv[1]).readlines()
 
+"""
+parse logs produced by benchmark.py to a better formatting
+"""
+
 def parse_param(line):
     ret = re.findall('[0-9]+', line)
     assert len(ret) == 5

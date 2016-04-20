@@ -6,7 +6,7 @@
 
 import sys, os, time
 
-cmd_prefix = sys.argv[1]
+cmd_prefix = sys.argv[1]    # a command that accepts arguments B HW K Cin Cout
 
 def test(b, cin, cout, hw, k):
     cmd = cmd_prefix + " {b} {hw} {hw} {k} {cin} {cout}".format(**locals())
