@@ -35,6 +35,7 @@ class Conv2DNCHWFFT : public Layer {
 		PaddingMode padding_;
 		Shape stride_, filter_, in_shape_, fft_shape_;
 		int out_ch_, in_ch_;
+		bool large_ = false;
 };
 
 }

@@ -37,4 +37,6 @@ with open('proto.prototxt', 'w') as f:
     f.write(proto)
 
 CAFFE_BIN = os.path.join(CAFFE_ROOT, 'build/tools/caffe')
-os.system('{} time -model=proto.prototxt -iterations=10 2>&1 | grep "Average Forward pass"'.format(CAFFE_BIN))
+ret = os.system('{} time -model=proto.prototxt -iterations=10 2>&1 | grep "Average Forward pass"'.format(CAFFE_BIN))
+if ret != 0:
+    assert False

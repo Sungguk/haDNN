@@ -37,6 +37,7 @@ void Conv2DNCHWFFT::setup() {
 										 pow2roundup(in_shape_[1] + W.extent(0)/2)};
 	print_debug("FFT shape: %d, %d\n", fft_shape_[0], fft_shape_[1]);
 	if (max(fft_shape_[0], fft_shape_[1]) >= 256) {
+		large_ = true;
 		print_debug("FFT for shape >= 256 might be buggy.\n");
 	}
 	m_assert(b.extent(0) == out_ch_);
@@ -60,7 +61,7 @@ void Conv2DNCHWFFT::setup() {
 	desc.name = "imgfft";
 	img_fft = fft2d_r2c(padded, fft_shape_[1], fft_shape_[0], target, desc);
 	desc.name = "Wfft";
-	W_fft = fft2d_r2c(Wpadded, fft_shape_[1], fft_shape_[0], target);
+	W_fft = fft2d_r2c(Wpadded, fft_shape_[1], fft_shape_[0], target, desc);
 
 	rv = RDom{0, in_ch_, "rv"};
 	cgemm(Widx, Hidx, Coutidx, Nidx) = ComplexExpr{0, 0};
@@ -81,12 +82,23 @@ void Conv2DNCHWFFT::default_sched() {
 	auto&& U = cgemm.update();
 	U.reorder(Widx, Hidx, rv.x, Coutidx, Nidx);
 	//U.vectorize(Widx, 8);
-	U.parallel(Coutidx);	// seems too naive. only 2x speedup
 
-	cgemm.compute_at(ifft, Nidx);
-	ifft.compute_at(output_, Nidx);
-	//cgemm.compute_root();
-	//ifft.compute_root();
+	if (large_) {
+		U.parallel(Nidx);
+		ifft.parallel(Nidx);
+		cgemm.compute_root();
+		ifft.compute_root();
+		return;
+	}
+	if (false) {	// threading
+		ifft.compute_root();
+		cgemm.compute_at(ifft, Nidx);
+		ifft.parallel(Nidx);
+	} else {
+		U.parallel(Coutidx);	// seems too naive. only 2x speedup
+		cgemm.compute_at(ifft, Nidx);
+		ifft.compute_at(output_, Nidx);
+	}
 }
 
 ShapeExpr Conv2DNCHWFFT::out_shape() const {

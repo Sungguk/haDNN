@@ -96,8 +96,8 @@ void speed_test_conv_nchw_fft() {
 	ImageParam par(type_of<float>(), 4);
 	Input input{par};
 
-	int B = 128;
-	int H = 63, W = 63;
+	int B = 64;
+	int H = 128, W = 128;
 	int Cin = 64, Cout = 64;
 	Conv2DNCHWFFT l(&input, random_conv_param(Cin, Cout, 3),
 			{H, W}, PaddingMode::SAME);
