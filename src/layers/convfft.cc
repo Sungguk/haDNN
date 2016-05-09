@@ -38,8 +38,9 @@ void Conv2DNCHWFFT::setup() {
 	print_debug("FFT shape: %d, %d\n", fft_shape_[0], fft_shape_[1]);
 	if (max(fft_shape_[0], fft_shape_[1]) >= 256) {
 		large_ = true;
-		print_debug("FFT for shape >= 256 might be buggy.\n");
+		//print_debug("FFT for shape >= 256 might be buggy.\n");
 	}
+
 	m_assert(b.extent(0) == out_ch_);
 
 	auto top = tops_.at(0);
@@ -74,7 +75,6 @@ void Conv2DNCHWFFT::setup() {
 }
 
 void Conv2DNCHWFFT::default_sched() {
-	// TODO parallel
 	W_fft.compute_root();
 	img_fft.compute_root();
 	//img_fft.compute_at(cgemm, Nidx);
