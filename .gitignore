@@ -33,6 +33,5 @@ obj
 *.txt
 *.tensortxt
 *.npy
-*.png
 
 *.data
